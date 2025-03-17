@@ -1,12 +1,9 @@
 
-export type Difficulty = 'easy' | 'medium' | 'hard';
-
 export interface Boardgame {
   id: string;
   title: string;
   description: string;
-  difficulty: Difficulty;
-  complexityRating?: number; // BGG complexity rating (1-5 scale)
+  complexityRating: number; // BGG complexity rating (1-5 scale)
   videoUrl?: string;
   bggUrl?: string;
   imageUrl?: string;

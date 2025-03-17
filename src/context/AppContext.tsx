@@ -1,6 +1,5 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Boardgame, Event, Participation, User, Difficulty } from '@/types';
+import { Boardgame, Event, Participation, User } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 
 interface AppContextType {
@@ -45,7 +44,6 @@ const initialBoardgames: Boardgame[] = [
     id: '1',
     title: 'Catan',
     description: 'Build settlements, trade resources, and compete for longest road in this classic strategy game.',
-    difficulty: 'medium',
     complexityRating: 2.3,
     bggUrl: 'https://boardgamegeek.com/boardgame/13/catan',
     videoUrl: 'https://www.youtube.com/watch?v=cPhX_1RiwEg',
@@ -55,7 +53,6 @@ const initialBoardgames: Boardgame[] = [
     id: '2',
     title: 'Ticket to Ride',
     description: 'Collect cards, build train routes, and connect cities across North America in this railway adventure.',
-    difficulty: 'easy',
     complexityRating: 1.8,
     bggUrl: 'https://boardgamegeek.com/boardgame/9209/ticket-ride',
     videoUrl: 'https://www.youtube.com/watch?v=4JhFhyvGdik',
@@ -65,7 +62,6 @@ const initialBoardgames: Boardgame[] = [
     id: '3',
     title: 'Gloomhaven',
     description: 'A campaign-based dungeon crawl game with legacy elements and tactical combat.',
-    difficulty: 'hard',
     complexityRating: 3.9,
     bggUrl: 'https://boardgamegeek.com/boardgame/174430/gloomhaven',
     videoUrl: 'https://www.youtube.com/watch?v=mKc5XhvkR6Y',
@@ -112,7 +108,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return null;
   });
 
-  // Save to localStorage whenever state changes
   useEffect(() => {
     localStorage.setItem('boardgames', JSON.stringify(boardgames));
   }, [boardgames]);
@@ -125,7 +120,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem('participations', JSON.stringify(participations));
   }, [participations]);
 
-  // Boardgame functions
   const addBoardgame = (boardgame: Omit<Boardgame, 'id'>) => {
     const newBoardgame = {
       ...boardgame,
@@ -152,7 +146,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const boardgameToDelete = boardgames.find(bg => bg.id === id);
     setBoardgames(boardgames.filter(bg => bg.id !== id));
     
-    // Also need to remove from any events
     setEvents(
       events.map(event => ({
         ...event,
@@ -166,7 +159,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
-  // Event functions
   const addEvent = (event: Omit<Event, 'id'>) => {
     const newEvent = {
       ...event,
@@ -193,7 +185,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const eventToDelete = events.find(e => e.id === id);
     setEvents(events.filter(event => event.id !== id));
     
-    // Also remove any participations for this event
     setParticipations(
       participations.filter(p => p.eventId !== id)
     );
@@ -204,7 +195,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
-  // Participation functions
   const setParticipation = (userId: string, eventId: string, attending: boolean) => {
     const existingIndex = participations.findIndex(
       p => p.userId === userId && p.eventId === eventId
@@ -272,7 +262,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
-  // User functions
   const login = (userId: string) => {
     const user = users.find(u => u.id === userId);
     if (user) {

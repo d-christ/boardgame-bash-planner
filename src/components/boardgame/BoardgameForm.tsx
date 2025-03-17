@@ -1,12 +1,11 @@
 
 import { useState } from 'react';
 import { useApp } from '@/context/AppContext';
-import { Boardgame, Difficulty } from '@/types';
+import { Boardgame } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
 import { Save, X } from 'lucide-react';
@@ -21,7 +20,6 @@ export const BoardgameForm = ({ boardgame, onSave, onCancel }: BoardgameFormProp
   const { addBoardgame, updateBoardgame } = useApp();
   const [title, setTitle] = useState(boardgame?.title || '');
   const [description, setDescription] = useState(boardgame?.description || '');
-  const [difficulty, setDifficulty] = useState<Difficulty>(boardgame?.difficulty || 'medium');
   const [complexityRating, setComplexityRating] = useState<number>(boardgame?.complexityRating || 2.5);
   const [videoUrl, setVideoUrl] = useState(boardgame?.videoUrl || '');
   const [bggUrl, setBggUrl] = useState(boardgame?.bggUrl || '');
@@ -33,7 +31,6 @@ export const BoardgameForm = ({ boardgame, onSave, onCancel }: BoardgameFormProp
     const boardgameData = {
       title,
       description,
-      difficulty,
       complexityRating,
       videoUrl: videoUrl || undefined,
       bggUrl: bggUrl || undefined,
@@ -83,28 +80,6 @@ export const BoardgameForm = ({ boardgame, onSave, onCancel }: BoardgameFormProp
               onChange={(e) => setDescription(e.target.value)}
               required
             />
-          </div>
-          
-          <div className="space-y-2">
-            <Label>Difficulty (Legacy)</Label>
-            <RadioGroup 
-              value={difficulty} 
-              onValueChange={(value) => setDifficulty(value as Difficulty)}
-              className="flex space-x-4"
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="easy" id="easy" />
-                <Label htmlFor="easy" className="difficulty-easy">Easy</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="medium" id="medium" />
-                <Label htmlFor="medium" className="difficulty-medium">Medium</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="hard" id="hard" />
-                <Label htmlFor="hard" className="difficulty-hard">Hard</Label>
-              </div>
-            </RadioGroup>
           </div>
           
           <div className="space-y-4">

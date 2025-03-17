@@ -2,7 +2,7 @@
 import { Boardgame } from '@/types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Book, Video, ExternalLink } from 'lucide-react';
+import { Video, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface BoardgameCardProps {
@@ -12,18 +12,10 @@ interface BoardgameCardProps {
 }
 
 export const BoardgameCard = ({ boardgame, actions, compact = false }: BoardgameCardProps) => {
-  const { title, description, difficulty, complexityRating, videoUrl, bggUrl, imageUrl } = boardgame;
+  const { title, description, complexityRating, videoUrl, bggUrl, imageUrl } = boardgame;
   
   // Helper function to get the complexity label and class
-  const getComplexityInfo = (rating?: number) => {
-    if (rating === undefined) {
-      // Fallback to difficulty if no complexity rating
-      return {
-        label: difficulty.charAt(0).toUpperCase() + difficulty.slice(1),
-        className: `difficulty-${difficulty}`
-      };
-    }
-    
+  const getComplexityInfo = (rating: number) => {
     if (rating <= 1.5) return { label: `Light (${rating})`, className: 'complexity-light' };
     if (rating <= 2.5) return { label: `Medium-Light (${rating})`, className: 'complexity-medium-light' };
     if (rating <= 3.5) return { label: `Medium (${rating})`, className: 'complexity-medium' };

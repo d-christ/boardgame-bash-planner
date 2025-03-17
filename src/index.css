@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -92,18 +93,6 @@
   body {
     @apply bg-background text-foreground;
   }
-}
-
-.difficulty-easy {
-  @apply text-game-easy font-medium;
-}
-
-.difficulty-medium {
-  @apply text-game-medium font-medium;
-}
-
-.difficulty-hard {
-  @apply text-game-hard font-medium;
 }
 
 .complexity-light {
