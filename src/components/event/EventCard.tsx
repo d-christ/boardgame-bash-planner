@@ -43,12 +43,10 @@ export const EventCard = ({ event, detailed = false, actions }: EventCardProps) 
       <CardHeader>
         <div className="flex justify-between items-start">
           <CardTitle className="text-xl">{event.title}</CardTitle>
-          {event.maxAttendees && (
-            <Badge variant="outline" className="flex items-center">
-              <Users className="h-3 w-3 mr-1" />
-              {attendeesCount} / {event.maxAttendees}
-            </Badge>
-          )}
+          <Badge variant="outline" className="flex items-center">
+            <Users className="h-3 w-3 mr-1" />
+            {attendeesCount} attendees
+          </Badge>
         </div>
         <CardDescription>{event.description}</CardDescription>
       </CardHeader>

@@ -1,4 +1,5 @@
 
+
 export interface Boardgame {
   id: string;
   title: string;
@@ -14,7 +15,6 @@ export interface Event {
   title: string;
   description: string;
   date: Date;
-  maxAttendees?: number;
   boardgames: string[]; // Array of boardgame IDs
 }
 
@@ -31,3 +31,4 @@ export interface User {
   name: string;
   isAdmin: boolean;
 }
+

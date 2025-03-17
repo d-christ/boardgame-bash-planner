@@ -67,12 +67,10 @@ const EventDetails = () => {
                     <CardDescription className="text-base mt-1">{event.description}</CardDescription>
                   </div>
                   
-                  {event.maxAttendees && (
-                    <Badge variant="outline" className="flex items-center text-base">
-                      <Users className="h-4 w-4 mr-2" />
-                      {attendees.length} / {event.maxAttendees}
-                    </Badge>
-                  )}
+                  <Badge variant="outline" className="flex items-center text-base">
+                    <Users className="h-4 w-4 mr-2" />
+                    {attendees.length} attendees
+                  </Badge>
                 </div>
               </CardHeader>
               

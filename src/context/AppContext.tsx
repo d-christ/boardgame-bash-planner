@@ -76,7 +76,6 @@ const initialEvents: Event[] = [
     title: 'Saturday Game Night',
     description: 'Weekly gaming session with a focus on strategy games',
     date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 1 week from now
-    maxAttendees: 12,
     boardgames: ['1', '2']
   }
 ];

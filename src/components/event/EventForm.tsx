@@ -30,7 +30,6 @@ export const EventForm = ({ event, onSave, onCancel }: EventFormProps) => {
   const [title, setTitle] = useState(event?.title || '');
   const [description, setDescription] = useState(event?.description || '');
   const [date, setDate] = useState<Date>(event?.date ? new Date(event.date) : new Date());
-  const [maxAttendees, setMaxAttendees] = useState<number | undefined>(event?.maxAttendees);
   const [selectedBoardgames, setSelectedBoardgames] = useState<string[]>(event?.boardgames || []);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -40,7 +39,6 @@ export const EventForm = ({ event, onSave, onCancel }: EventFormProps) => {
       title,
       description,
       date,
-      maxAttendees,
       boardgames: selectedBoardgames
     };
     
@@ -113,17 +111,6 @@ export const EventForm = ({ event, onSave, onCancel }: EventFormProps) => {
                 />
               </PopoverContent>
             </Popover>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="maxAttendees">Maximum Attendees (optional)</Label>
-            <Input
-              id="maxAttendees"
-              type="number"
-              min="1"
-              value={maxAttendees || ''}
-              onChange={(e) => setMaxAttendees(e.target.value ? parseInt(e.target.value) : undefined)}
-            />
           </div>
           
           <div className="space-y-2">
