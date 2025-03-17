@@ -129,6 +129,20 @@ export const GamePreferences = ({ eventId, eventBoardgames }: GamePreferencesPro
     return null;
   }
   
+  // Helper function to get complexity class
+  const getComplexityClass = (rating: number) => {
+    if (rating <= 1.5) return 'complexity-light';
+    if (rating <= 2.5) return 'complexity-medium-light';
+    if (rating <= 3.5) return 'complexity-medium';
+    if (rating <= 4.5) return 'complexity-medium-heavy';
+    return 'complexity-heavy';
+  };
+  
+  // Helper function to format complexity
+  const formatComplexity = (rating: number) => {
+    return rating.toFixed(1);
+  };
+  
   return (
     <Card>
       <CardHeader>
@@ -181,9 +195,9 @@ export const GamePreferences = ({ eventId, eventBoardgames }: GamePreferencesPro
                       <div>
                         <h3 className="font-medium">{game.title}</h3>
                         <Badge 
-                          className={`mt-1 difficulty-${game.difficulty}`}
+                          className={getComplexityClass(game.complexityRating)}
                         >
-                          {game.difficulty}
+                          {formatComplexity(game.complexityRating)}
                         </Badge>
                       </div>
                     </div>
