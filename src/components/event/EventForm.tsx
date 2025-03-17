@@ -30,7 +30,6 @@ export const EventForm = ({ event, onSave, onCancel }: EventFormProps) => {
   const [title, setTitle] = useState(event?.title || '');
   const [description, setDescription] = useState(event?.description || '');
   const [date, setDate] = useState<Date>(event?.date ? new Date(event.date) : new Date());
-  const [location, setLocation] = useState(event?.location || '');
   const [maxAttendees, setMaxAttendees] = useState<number | undefined>(event?.maxAttendees);
   const [selectedBoardgames, setSelectedBoardgames] = useState<string[]>(event?.boardgames || []);
 
@@ -41,7 +40,6 @@ export const EventForm = ({ event, onSave, onCancel }: EventFormProps) => {
       title,
       description,
       date,
-      location,
       maxAttendees,
       boardgames: selectedBoardgames
     };
@@ -115,16 +113,6 @@ export const EventForm = ({ event, onSave, onCancel }: EventFormProps) => {
                 />
               </PopoverContent>
             </Popover>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="location">Location</Label>
-            <Input
-              id="location"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              required
-            />
           </div>
           
           <div className="space-y-2">

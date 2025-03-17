@@ -5,7 +5,7 @@ import { useApp } from '@/context/AppContext';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, MapPin, Users, ChevronDown, ChevronUp } from 'lucide-react';
+import { Calendar, Users, ChevronDown, ChevronUp } from 'lucide-react';
 import { BoardgameCard } from '@/components/boardgame/BoardgameCard';
 import { format } from 'date-fns';
 
@@ -58,11 +58,6 @@ export const EventCard = ({ event, detailed = false, actions }: EventCardProps) 
           <div className="flex items-center text-muted-foreground">
             <Calendar className="h-4 w-4 mr-2" />
             <span>{format(new Date(event.date), 'PPP')}</span>
-          </div>
-          
-          <div className="flex items-center text-muted-foreground">
-            <MapPin className="h-4 w-4 mr-2" />
-            <span>{event.location}</span>
           </div>
           
           {isAttending && (

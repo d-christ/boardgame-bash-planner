@@ -14,7 +14,6 @@ export interface Event {
   title: string;
   description: string;
   date: Date;
-  location: string;
   maxAttendees?: number;
   boardgames: string[]; // Array of boardgame IDs
 }

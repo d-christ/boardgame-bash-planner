@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Navigation } from '@/components/Navigation';
-import { Calendar, MapPin, Users, Check, X, ArrowLeft } from 'lucide-react';
+import { Calendar, Users, Check, X, ArrowLeft } from 'lucide-react';
 import { format } from 'date-fns';
 import { BoardgameCard } from '@/components/boardgame/BoardgameCard';
 import { GamePreferences } from '@/components/participation/GamePreferences';
@@ -77,16 +77,9 @@ const EventDetails = () => {
               </CardHeader>
               
               <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex items-center">
-                    <Calendar className="h-5 w-5 mr-3" />
-                    <span className="text-lg">{format(new Date(event.date), 'PPP')}</span>
-                  </div>
-                  
-                  <div className="flex items-center">
-                    <MapPin className="h-5 w-5 mr-3" />
-                    <span className="text-lg">{event.location}</span>
-                  </div>
+                <div className="flex items-center">
+                  <Calendar className="h-5 w-5 mr-3" />
+                  <span className="text-lg">{format(new Date(event.date), 'PPP')}</span>
                 </div>
                 
                 {currentUser && (
