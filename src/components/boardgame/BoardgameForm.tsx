@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Slider } from '@/components/ui/slider';
 import { Save, X } from 'lucide-react';
 
 interface BoardgameFormProps {
@@ -21,6 +22,7 @@ export const BoardgameForm = ({ boardgame, onSave, onCancel }: BoardgameFormProp
   const [title, setTitle] = useState(boardgame?.title || '');
   const [description, setDescription] = useState(boardgame?.description || '');
   const [difficulty, setDifficulty] = useState<Difficulty>(boardgame?.difficulty || 'medium');
+  const [complexityRating, setComplexityRating] = useState<number>(boardgame?.complexityRating || 2.5);
   const [videoUrl, setVideoUrl] = useState(boardgame?.videoUrl || '');
   const [bggUrl, setBggUrl] = useState(boardgame?.bggUrl || '');
   const [imageUrl, setImageUrl] = useState(boardgame?.imageUrl || '');
@@ -32,6 +34,7 @@ export const BoardgameForm = ({ boardgame, onSave, onCancel }: BoardgameFormProp
       title,
       description,
       difficulty,
+      complexityRating,
       videoUrl: videoUrl || undefined,
       bggUrl: bggUrl || undefined,
       imageUrl: imageUrl || undefined
@@ -44,6 +47,15 @@ export const BoardgameForm = ({ boardgame, onSave, onCancel }: BoardgameFormProp
     }
     
     onSave();
+  };
+
+  // Helper function to get the complexity label
+  const getComplexityLabel = (value: number) => {
+    if (value <= 1.5) return `Light (${value.toFixed(1)})`;
+    if (value <= 2.5) return `Medium-Light (${value.toFixed(1)})`;
+    if (value <= 3.5) return `Medium (${value.toFixed(1)})`;
+    if (value <= 4.5) return `Medium-Heavy (${value.toFixed(1)})`;
+    return `Heavy (${value.toFixed(1)})`;
   };
 
   return (
@@ -74,7 +86,7 @@ export const BoardgameForm = ({ boardgame, onSave, onCancel }: BoardgameFormProp
           </div>
           
           <div className="space-y-2">
-            <Label>Difficulty</Label>
+            <Label>Difficulty (Legacy)</Label>
             <RadioGroup 
               value={difficulty} 
               onValueChange={(value) => setDifficulty(value as Difficulty)}
@@ -93,6 +105,27 @@ export const BoardgameForm = ({ boardgame, onSave, onCancel }: BoardgameFormProp
                 <Label htmlFor="hard" className="difficulty-hard">Hard</Label>
               </div>
             </RadioGroup>
+          </div>
+          
+          <div className="space-y-4">
+            <div>
+              <Label>Complexity Rating (BGG Scale)</Label>
+              <div className="flex items-center space-x-2 mt-1">
+                <span className="text-sm">1</span>
+                <Slider
+                  value={[complexityRating]}
+                  min={1}
+                  max={5}
+                  step={0.1}
+                  onValueChange={(value) => setComplexityRating(value[0])}
+                  className="flex-1"
+                />
+                <span className="text-sm">5</span>
+              </div>
+            </div>
+            <div className="text-center">
+              <span className="text-sm font-medium">{getComplexityLabel(complexityRating)}</span>
+            </div>
           </div>
           
           <div className="space-y-2">

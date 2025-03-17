@@ -8,19 +8,33 @@ import { Navigation } from '@/components/Navigation';
 import { Link } from 'react-router-dom';
 import { Search, Gamepad, ExternalLink } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Difficulty } from '@/types';
+
+type ComplexityFilter = 'all' | 'light' | 'medium-light' | 'medium' | 'medium-heavy' | 'heavy';
 
 const BoardgameList = () => {
   const { boardgames } = useApp();
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterDifficulty, setFilterDifficulty] = useState<Difficulty | ''>('');
+  const [filterComplexity, setFilterComplexity] = useState<ComplexityFilter>('all');
   
-  // Filter boardgames based on search and difficulty filter
+  // Filter boardgames based on search and complexity filter
   const filteredBoardgames = boardgames.filter(bg => {
     const matchesSearch = bg.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           bg.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesDifficulty = filterDifficulty === '' || bg.difficulty === filterDifficulty;
-    return matchesSearch && matchesDifficulty;
+    
+    // Complexity filtering                      
+    let matchesComplexity = true;
+    if (filterComplexity !== 'all' && bg.complexityRating) {
+      const rating = bg.complexityRating;
+      switch (filterComplexity) {
+        case 'light': matchesComplexity = rating <= 1.5; break;
+        case 'medium-light': matchesComplexity = rating > 1.5 && rating <= 2.5; break;
+        case 'medium': matchesComplexity = rating > 2.5 && rating <= 3.5; break;
+        case 'medium-heavy': matchesComplexity = rating > 3.5 && rating <= 4.5; break;
+        case 'heavy': matchesComplexity = rating > 4.5; break;
+      }
+    }
+    
+    return matchesSearch && matchesComplexity;
   });
 
   return (
@@ -47,33 +61,47 @@ const BoardgameList = () => {
               />
             </div>
             
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Button
-                variant={filterDifficulty === '' ? 'default' : 'outline'}
-                onClick={() => setFilterDifficulty('')}
+                variant={filterComplexity === 'all' ? 'default' : 'outline'}
+                onClick={() => setFilterComplexity('all')}
               >
                 All
               </Button>
               <Button
-                variant={filterDifficulty === 'easy' ? 'default' : 'outline'}
-                className={filterDifficulty === 'easy' ? 'bg-game-easy text-white' : ''}
-                onClick={() => setFilterDifficulty('easy')}
+                variant={filterComplexity === 'light' ? 'default' : 'outline'}
+                className={filterComplexity === 'light' ? 'bg-blue-400 text-white' : ''}
+                onClick={() => setFilterComplexity('light')}
               >
-                Easy
+                Light
               </Button>
               <Button
-                variant={filterDifficulty === 'medium' ? 'default' : 'outline'}
-                className={filterDifficulty === 'medium' ? 'bg-game-medium text-white' : ''}
-                onClick={() => setFilterDifficulty('medium')}
+                variant={filterComplexity === 'medium-light' ? 'default' : 'outline'}
+                className={filterComplexity === 'medium-light' ? 'bg-teal-400 text-white' : ''}
+                onClick={() => setFilterComplexity('medium-light')}
+              >
+                Medium-Light
+              </Button>
+              <Button
+                variant={filterComplexity === 'medium' ? 'default' : 'outline'}
+                className={filterComplexity === 'medium' ? 'bg-yellow-400 text-white' : ''}
+                onClick={() => setFilterComplexity('medium')}
               >
                 Medium
               </Button>
               <Button
-                variant={filterDifficulty === 'hard' ? 'default' : 'outline'}
-                className={filterDifficulty === 'hard' ? 'bg-game-hard text-white' : ''}
-                onClick={() => setFilterDifficulty('hard')}
+                variant={filterComplexity === 'medium-heavy' ? 'default' : 'outline'}
+                className={filterComplexity === 'medium-heavy' ? 'bg-orange-400 text-white' : ''}
+                onClick={() => setFilterComplexity('medium-heavy')}
               >
-                Hard
+                Medium-Heavy
+              </Button>
+              <Button
+                variant={filterComplexity === 'heavy' ? 'default' : 'outline'}
+                className={filterComplexity === 'heavy' ? 'bg-red-400 text-white' : ''}
+                onClick={() => setFilterComplexity('heavy')}
+              >
+                Heavy
               </Button>
             </div>
           </div>

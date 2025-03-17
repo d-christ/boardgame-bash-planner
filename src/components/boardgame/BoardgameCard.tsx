@@ -12,7 +12,26 @@ interface BoardgameCardProps {
 }
 
 export const BoardgameCard = ({ boardgame, actions, compact = false }: BoardgameCardProps) => {
-  const { title, description, difficulty, videoUrl, bggUrl, imageUrl } = boardgame;
+  const { title, description, difficulty, complexityRating, videoUrl, bggUrl, imageUrl } = boardgame;
+  
+  // Helper function to get the complexity label and class
+  const getComplexityInfo = (rating?: number) => {
+    if (rating === undefined) {
+      // Fallback to difficulty if no complexity rating
+      return {
+        label: difficulty.charAt(0).toUpperCase() + difficulty.slice(1),
+        className: `difficulty-${difficulty}`
+      };
+    }
+    
+    if (rating <= 1.5) return { label: `Light (${rating})`, className: 'complexity-light' };
+    if (rating <= 2.5) return { label: `Medium-Light (${rating})`, className: 'complexity-medium-light' };
+    if (rating <= 3.5) return { label: `Medium (${rating})`, className: 'complexity-medium' };
+    if (rating <= 4.5) return { label: `Medium-Heavy (${rating})`, className: 'complexity-medium-heavy' };
+    return { label: `Heavy (${rating})`, className: 'complexity-heavy' };
+  };
+  
+  const complexityInfo = getComplexityInfo(complexityRating);
   
   return (
     <Card className={`h-full flex flex-col ${compact ? 'shadow-sm' : 'shadow-md hover:shadow-lg transition-shadow'}`}>
@@ -29,8 +48,8 @@ export const BoardgameCard = ({ boardgame, actions, compact = false }: Boardgame
       <CardHeader className={compact ? 'py-3 px-4' : ''}>
         <div className="flex justify-between items-start">
           <CardTitle className={compact ? 'text-base' : 'text-xl'}>{title}</CardTitle>
-          <Badge className={`difficulty-${difficulty}`}>
-            {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
+          <Badge className={complexityInfo.className}>
+            {complexityInfo.label}
           </Badge>
         </div>
         {!compact && <CardDescription>{description}</CardDescription>}

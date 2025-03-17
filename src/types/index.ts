@@ -6,6 +6,7 @@ export interface Boardgame {
   title: string;
   description: string;
   difficulty: Difficulty;
+  complexityRating?: number; // BGG complexity rating (1-5 scale)
   videoUrl?: string;
   bggUrl?: string;
   imageUrl?: string;

@@ -46,6 +46,7 @@ const initialBoardgames: Boardgame[] = [
     title: 'Catan',
     description: 'Build settlements, trade resources, and compete for longest road in this classic strategy game.',
     difficulty: 'medium',
+    complexityRating: 2.3,
     bggUrl: 'https://boardgamegeek.com/boardgame/13/catan',
     videoUrl: 'https://www.youtube.com/watch?v=cPhX_1RiwEg',
     imageUrl: 'https://cf.geekdo-images.com/W3Bsga_uLP9kO91gZ7H8yw__imagepage/img/M_3Vg1j2HlNgkv7PL2xl2BJE2bw=/fit-in/900x600/filters:no_upscale():strip_icc()/pic2419375.jpg'
@@ -55,6 +56,7 @@ const initialBoardgames: Boardgame[] = [
     title: 'Ticket to Ride',
     description: 'Collect cards, build train routes, and connect cities across North America in this railway adventure.',
     difficulty: 'easy',
+    complexityRating: 1.8,
     bggUrl: 'https://boardgamegeek.com/boardgame/9209/ticket-ride',
     videoUrl: 'https://www.youtube.com/watch?v=4JhFhyvGdik',
     imageUrl: 'https://cf.geekdo-images.com/ZWJg0dCdrWHxVnc0eFXK8w__imagepage/img/FcSGmLeIStNfKMMCh_nWTBkMIQM=/fit-in/900x600/filters:no_upscale():strip_icc()/pic38668.jpg'
@@ -64,6 +66,7 @@ const initialBoardgames: Boardgame[] = [
     title: 'Gloomhaven',
     description: 'A campaign-based dungeon crawl game with legacy elements and tactical combat.',
     difficulty: 'hard',
+    complexityRating: 3.9,
     bggUrl: 'https://boardgamegeek.com/boardgame/174430/gloomhaven',
     videoUrl: 'https://www.youtube.com/watch?v=mKc5XhvkR6Y',
     imageUrl: 'https://cf.geekdo-images.com/sZYp_3BTDGjh2unaZfZmuA__imagepage/img/Go-ks7YXaLPDLkyl5-sYnfA_QXs=/fit-in/900x600/filters:no_upscale():strip_icc()/pic2437871.jpg'
