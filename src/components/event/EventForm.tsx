@@ -125,10 +125,17 @@ export const EventForm = ({ event, onSave, onCancel }: EventFormProps) => {
                   onClick={() => toggleBoardgame(game.id)}
                 >
                   <div className="p-3 flex items-start gap-3">
-                    <Checkbox 
-                      checked={selectedBoardgames.includes(game.id)}
-                      onCheckedChange={() => toggleBoardgame(game.id)}
-                    />
+                    <div className="flex-shrink-0">
+                      <Checkbox 
+                        id={`game-${game.id}`}
+                        checked={selectedBoardgames.includes(game.id)}
+                        onCheckedChange={() => {
+                          // Handle checkbox change through the parent's click handler
+                          // This prevents direct state changes from the checkbox itself
+                        }}
+                        className="pointer-events-none" // Prevent direct interaction
+                      />
+                    </div>
                     <div className="flex-1">
                       <h3 className="font-medium">{game.title}</h3>
                       <p className="text-sm text-muted-foreground line-clamp-2">{game.description}</p>
