@@ -5,15 +5,16 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Navigation } from '@/components/Navigation';
-import { Calendar, Users, Check, X, ArrowLeft } from 'lucide-react';
+import { Calendar, Users, ArrowLeft } from 'lucide-react';
 import { format } from 'date-fns';
 import { BoardgameCard } from '@/components/boardgame/BoardgameCard';
 import { GamePreferences } from '@/components/participation/GamePreferences';
+import { AttendanceForm } from '@/components/participation/AttendanceForm';
 
 const EventDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { events, boardgames, currentUser, participations, setParticipation } = useApp();
+  const { events, boardgames, currentUser, participations } = useApp();
   
   // Find the event
   const event = events.find(e => e.id === id);
@@ -80,34 +81,6 @@ const EventDetails = () => {
                   <span className="text-lg">{format(new Date(event.date), 'PPP')}</span>
                 </div>
                 
-                {currentUser && (
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <Button 
-                      variant="outline" 
-                      className="flex-1"
-                      onClick={() => setParticipation(currentUser.id, event.id, false)}
-                    >
-                      <X className="mr-2 h-5 w-5" />
-                      I Can't Attend
-                    </Button>
-                    <Button 
-                      className="flex-1 bg-green-600 hover:bg-green-700"
-                      onClick={() => setParticipation(currentUser.id, event.id, true)}
-                    >
-                      <Check className="mr-2 h-5 w-5" />
-                      I'm Attending!
-                    </Button>
-                  </div>
-                )}
-                
-                {isAttending && (
-                  <div className="bg-green-50 border border-green-200 rounded-md p-4 mt-4">
-                    <p className="text-green-800 font-medium">
-                      You're attending this event! Set your game preferences below.
-                    </p>
-                  </div>
-                )}
-                
                 <div>
                   <h2 className="text-xl font-semibold mb-4">Available Games</h2>
                   {eventBoardgames.length === 0 ? (
@@ -125,8 +98,12 @@ const EventDetails = () => {
           </div>
           
           <div>
+            <AttendanceForm eventId={event.id} />
+            
             {isAttending && (
-              <GamePreferences eventId={event.id} eventBoardgames={eventBoardgames} />
+              <div className="mt-6">
+                <GamePreferences eventId={event.id} eventBoardgames={eventBoardgames} />
+              </div>
             )}
             
             <Card className="mt-6">
@@ -138,12 +115,14 @@ const EventDetails = () => {
                   <p className="text-muted-foreground">No one has signed up yet. Be the first!</p>
                 ) : (
                   <ul className="space-y-2">
-                    {attendees.map(attendee => {
-                      const user = useApp().users.find(u => u.id === attendee.userId);
+                    {attendees.map((attendee, index) => {
+                      const user = attendee.userId ? 
+                        useApp().users.find(u => u.id === attendee.userId) : null;
+                      
                       return (
-                        <li key={attendee.userId} className="flex items-center">
-                          <Check className="h-4 w-4 mr-2 text-green-500" />
-                          {user?.name || 'Unknown User'}
+                        <li key={attendee.userId || index} className="flex items-center">
+                          <Users className="h-4 w-4 mr-2 text-green-500" />
+                          {user?.name || attendee.attendeeName || 'Unknown Attendee'}
                           {user?.isAdmin && (
                             <Badge variant="outline" className="ml-2">Admin</Badge>
                           )}

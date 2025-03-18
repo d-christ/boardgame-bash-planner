@@ -32,7 +32,7 @@ export const EventCard = ({ event, detailed = false, actions }: EventCardProps) 
   // Check if current user is attending
   const userParticipation = currentUser 
     ? participations.find(
-        p => p.userId === currentUser.id && p.eventId === event.id
+        p => (p.userId === currentUser.id || p.attendeeName === currentUser.name) && p.eventId === event.id
       )
     : null;
   

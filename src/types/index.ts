@@ -1,5 +1,4 @@
 
-
 export interface Boardgame {
   id: string;
   title: string;
@@ -19,7 +18,8 @@ export interface Event {
 }
 
 export interface Participation {
-  userId: string;
+  userId?: string; // Optional since attendees can join without login
+  attendeeName?: string; // Name for attendees who don't login
   eventId: string;
   attending: boolean;
   rankings?: Record<string, number>; // boardgameId -> rank (1 = highest preference)
@@ -31,4 +31,3 @@ export interface User {
   name: string;
   isAdmin: boolean;
 }
-
