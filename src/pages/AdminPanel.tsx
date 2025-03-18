@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { useApp } from '@/context/AppContext';
+import { useApp } from '@/context';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';

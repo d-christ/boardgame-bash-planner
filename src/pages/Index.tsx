@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { useApp } from '@/context/AppContext';
+import { useApp } from '@/context';
 import { Button } from '@/components/ui/button';
 import { EventCard } from '@/components/event/EventCard';
 import { Navigation } from '@/components/Navigation';

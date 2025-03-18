@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { Boardgame } from '@/types';
-import { useApp } from '@/context/AppContext';
+import { useApp } from '@/context';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowUp, ArrowDown, X, Check, Save } from 'lucide-react';
