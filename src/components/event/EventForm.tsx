@@ -7,11 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Save, X, Calendar } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-import { BoardgameCard } from '@/components/boardgame/BoardgameCard';
 import {
   Popover,
   PopoverContent,
@@ -125,12 +123,27 @@ export const EventForm = ({ event, onSave, onCancel }: EventFormProps) => {
                   onClick={() => toggleBoardgame(game.id)}
                 >
                   <div className="p-3 flex items-start gap-3">
-                    <div className="flex-shrink-0">
-                      <Checkbox 
-                        checked={selectedBoardgames.includes(game.id)}
-                        className="pointer-events-none"
-                        disabled={true}
-                      />
+                    <div className="flex-shrink-0 flex items-center justify-center h-5 w-5">
+                      <div className={`h-4 w-4 rounded-sm border ${
+                        selectedBoardgames.includes(game.id) 
+                          ? 'bg-primary border-primary text-primary-foreground flex items-center justify-center' 
+                          : 'border-primary'
+                      }`}>
+                        {selectedBoardgames.includes(game.id) && (
+                          <svg 
+                            xmlns="http://www.w3.org/2000/svg" 
+                            viewBox="0 0 24 24" 
+                            fill="none" 
+                            stroke="currentColor" 
+                            strokeWidth="2"
+                            strokeLinecap="round" 
+                            strokeLinejoin="round" 
+                            className="h-3 w-3"
+                          >
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg>
+                        )}
+                      </div>
                     </div>
                     <div className="flex-1">
                       <h3 className="font-medium">{game.title}</h3>
