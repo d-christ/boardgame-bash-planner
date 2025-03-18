@@ -127,13 +127,9 @@ export const EventForm = ({ event, onSave, onCancel }: EventFormProps) => {
                   <div className="p-3 flex items-start gap-3">
                     <div className="flex-shrink-0">
                       <Checkbox 
-                        id={`game-${game.id}`}
                         checked={selectedBoardgames.includes(game.id)}
-                        onCheckedChange={() => {
-                          // Handle checkbox change through the parent's click handler
-                          // This prevents direct state changes from the checkbox itself
-                        }}
-                        className="pointer-events-none" // Prevent direct interaction
+                        className="pointer-events-none"
+                        disabled={true}
                       />
                     </div>
                     <div className="flex-1">
