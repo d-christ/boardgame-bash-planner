@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { 
   BarChart, 
@@ -26,6 +27,8 @@ export const GameRankingsDashboard = ({ eventId, eventBoardgames }: GameRankings
   const [chartData, setChartData] = useState<any[]>([]);
   const [detailedData, setDetailedData] = useState<Record<string, any>>({});
 
+  console.log("Participations data:", participations);
+
   // Process the data for the chart and detailed view
   useEffect(() => {
     if (!eventBoardgames.length) return;
@@ -34,6 +37,8 @@ export const GameRankingsDashboard = ({ eventId, eventBoardgames }: GameRankings
     const eventParticipations = participations.filter(
       p => p.eventId === eventId && p.attending
     );
+    
+    console.log("Event participations:", eventParticipations);
     
     // Calculate the aggregate rankings for each boardgame
     const aggregateRankings: Record<string, { 
@@ -58,6 +63,9 @@ export const GameRankingsDashboard = ({ eventId, eventBoardgames }: GameRankings
     // Aggregate the rankings data
     eventParticipations.forEach(participation => {
       if (!participation.rankings && !participation.excluded) return;
+      
+      console.log("Checking participation for:", participation.userId || participation.attendeeName);
+      console.log("Rankings:", participation.rankings);
       
       // Process rankings
       if (participation.rankings) {
@@ -136,11 +144,11 @@ export const GameRankingsDashboard = ({ eventId, eventBoardgames }: GameRankings
       
       eventBoardgames.forEach(game => {
         const isExcluded = participation.excluded?.includes(game.id);
-        const rank = participation.rankings?.[game.id] || null;
+        const rank = participation.rankings?.[game.id];
         
         detailed[game.id].participants.push({
           name: userName,
-          rank: isExcluded ? 'Excluded' : (rank || 'Unranked'),
+          rank: isExcluded ? 'Excluded' : (rank !== undefined ? rank : 'Unranked'),
           userId: participation.userId,
           attendeeName: participation.attendeeName
         });

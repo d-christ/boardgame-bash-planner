@@ -71,6 +71,8 @@ export const useParticipationActions = ({
   };
 
   const updateRankings = (userId: string, eventId: string, rankings: Record<string, number>) => {
+    console.log("Updating rankings:", userId, eventId, rankings);
+    
     // Check if this is a guest user or a logged-in user
     const isGuestParticipation = !participations.some(p => p.userId === userId);
     
@@ -80,12 +82,15 @@ export const useParticipationActions = ({
         p => p.attendeeName === userId && p.eventId === eventId
       );
       
+      console.log("Guest participation index:", existingIndex, "Name:", userId);
+      
       if (existingIndex >= 0) {
         const updatedParticipations = [...participations];
         updatedParticipations[existingIndex] = {
           ...updatedParticipations[existingIndex],
           rankings
         };
+        console.log("Updated participation:", updatedParticipations[existingIndex]);
         setParticipations(updatedParticipations);
       }
     } else {
@@ -94,12 +99,15 @@ export const useParticipationActions = ({
         p => p.userId === userId && p.eventId === eventId
       );
 
+      console.log("User participation index:", existingIndex, "ID:", userId);
+
       if (existingIndex >= 0) {
         const updatedParticipations = [...participations];
         updatedParticipations[existingIndex] = {
           ...updatedParticipations[existingIndex],
           rankings
         };
+        console.log("Updated participation:", updatedParticipations[existingIndex]);
         setParticipations(updatedParticipations);
       }
     }
