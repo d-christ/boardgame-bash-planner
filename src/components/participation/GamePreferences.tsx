@@ -13,12 +13,15 @@ interface GamePreferencesProps {
 }
 
 export const GamePreferences = ({ eventId, eventBoardgames }: GamePreferencesProps) => {
-  const { currentUser, participations, updateRankings, updateExcluded, setAttendanceByName } = useApp();
+  const { currentUser, participations, updateRankings, updateExcluded } = useApp();
   
   // Get user's participation data
+  const userIdentifier = currentUser ? currentUser.id : undefined;
+  const guestName = !currentUser ? participations.find(p => p.eventId === eventId && p.attending && !p.userId)?.attendeeName : undefined;
+  
   const userParticipation = currentUser 
     ? participations.find(p => p.userId === currentUser.id && p.eventId === eventId)
-    : participations.find(p => p.eventId === eventId && p.attending && !p.userId);
+    : guestName ? participations.find(p => p.attendeeName === guestName && p.eventId === eventId) : undefined;
   
   // Initialize game list state
   const [gameList, setGameList] = useState<Boardgame[]>([]);
@@ -29,10 +32,12 @@ export const GamePreferences = ({ eventId, eventBoardgames }: GamePreferencesPro
   // Initialize state from participation
   useEffect(() => {
     if (userParticipation) {
+      console.log("User participation found:", userParticipation);
       setExcluded(userParticipation.excluded || []);
       
       // Create a ranked list of games
       if (userParticipation.rankings) {
+        console.log("Rankings found:", userParticipation.rankings);
         const sortedGames = [...eventBoardgames].sort((a, b) => {
           const rankA = userParticipation.rankings?.[a.id] || 999;
           const rankB = userParticipation.rankings?.[b.id] || 999;
@@ -100,33 +105,20 @@ export const GamePreferences = ({ eventId, eventBoardgames }: GamePreferencesPro
       rankings[game.id] = index + 1;
     });
     
-    if (currentUser) {
-      // Save preferences for logged-in user
-      updateRankings(currentUser.id, eventId, rankings);
-      updateExcluded(currentUser.id, eventId, excluded);
-    } else if (userParticipation?.attendeeName) {
-      // Save preferences for guest user
-      // First, ensure attendance is set (in case it's a new session)
-      setAttendanceByName(
-        userParticipation.attendeeName, 
-        eventId, 
-        true
-      );
-      
-      // Then update the rankings and exclusions
-      // We need to pass undefined as userId to ensure it updates the correct participation
-      setAttendanceByName(
-        userParticipation.attendeeName,
-        eventId,
-        true,
-        undefined
-      );
-      
-      // Use the updateRankings and updateExcluded functions directly
-      const participationId = userParticipation.attendeeName;
-      updateRankings(participationId, eventId, rankings);
-      updateExcluded(participationId, eventId, excluded);
+    const participantId = currentUser ? currentUser.id : guestName;
+    
+    if (!participantId) {
+      console.error("Cannot save preferences: No user ID or guest name found");
+      return;
     }
+    
+    console.log("Saving rankings for:", participantId, "Rankings:", rankings);
+    
+    // Update rankings
+    updateRankings(participantId, eventId, rankings);
+    
+    // Update exclusions
+    updateExcluded(participantId, eventId, excluded);
   };
   
   // Get complexity class - helper function

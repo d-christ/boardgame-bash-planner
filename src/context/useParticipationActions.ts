@@ -76,40 +76,32 @@ export const useParticipationActions = ({
     // Check if this is a guest user or a logged-in user
     const isGuestParticipation = !participations.some(p => p.userId === userId);
     
+    let existingIndex = -1;
+    
     if (isGuestParticipation) {
       // For guest participants, find by name instead
-      const existingIndex = participations.findIndex(
+      existingIndex = participations.findIndex(
         p => p.attendeeName === userId && p.eventId === eventId
       );
       
       console.log("Guest participation index:", existingIndex, "Name:", userId);
-      
-      if (existingIndex >= 0) {
-        const updatedParticipations = [...participations];
-        updatedParticipations[existingIndex] = {
-          ...updatedParticipations[existingIndex],
-          rankings
-        };
-        console.log("Updated participation:", updatedParticipations[existingIndex]);
-        setParticipations(updatedParticipations);
-      }
     } else {
       // For logged-in users, use userId as before
-      const existingIndex = participations.findIndex(
+      existingIndex = participations.findIndex(
         p => p.userId === userId && p.eventId === eventId
       );
 
       console.log("User participation index:", existingIndex, "ID:", userId);
-
-      if (existingIndex >= 0) {
-        const updatedParticipations = [...participations];
-        updatedParticipations[existingIndex] = {
-          ...updatedParticipations[existingIndex],
-          rankings
-        };
-        console.log("Updated participation:", updatedParticipations[existingIndex]);
-        setParticipations(updatedParticipations);
-      }
+    }
+    
+    if (existingIndex >= 0) {
+      const updatedParticipations = [...participations];
+      updatedParticipations[existingIndex] = {
+        ...updatedParticipations[existingIndex],
+        rankings
+      };
+      console.log("Updated participation:", updatedParticipations[existingIndex]);
+      setParticipations(updatedParticipations);
     }
     
     toast({
@@ -122,34 +114,27 @@ export const useParticipationActions = ({
     // Check if this is a guest user or a logged-in user
     const isGuestParticipation = !participations.some(p => p.userId === userId);
     
+    let existingIndex = -1;
+    
     if (isGuestParticipation) {
       // For guest participants, find by name instead
-      const existingIndex = participations.findIndex(
+      existingIndex = participations.findIndex(
         p => p.attendeeName === userId && p.eventId === eventId
       );
-      
-      if (existingIndex >= 0) {
-        const updatedParticipations = [...participations];
-        updatedParticipations[existingIndex] = {
-          ...updatedParticipations[existingIndex],
-          excluded
-        };
-        setParticipations(updatedParticipations);
-      }
     } else {
       // For logged-in users, use userId as before
-      const existingIndex = participations.findIndex(
+      existingIndex = participations.findIndex(
         p => p.userId === userId && p.eventId === eventId
       );
-
-      if (existingIndex >= 0) {
-        const updatedParticipations = [...participations];
-        updatedParticipations[existingIndex] = {
-          ...updatedParticipations[existingIndex],
-          excluded
-        };
-        setParticipations(updatedParticipations);
-      }
+    }
+    
+    if (existingIndex >= 0) {
+      const updatedParticipations = [...participations];
+      updatedParticipations[existingIndex] = {
+        ...updatedParticipations[existingIndex],
+        excluded
+      };
+      setParticipations(updatedParticipations);
     }
     
     toast({

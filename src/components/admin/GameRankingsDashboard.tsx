@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { 
   BarChart, 
@@ -62,8 +61,6 @@ export const GameRankingsDashboard = ({ eventId, eventBoardgames }: GameRankings
     
     // Aggregate the rankings data
     eventParticipations.forEach(participation => {
-      if (!participation.rankings && !participation.excluded) return;
-      
       console.log("Checking participation for:", participation.userId || participation.attendeeName);
       console.log("Rankings:", participation.rankings);
       
