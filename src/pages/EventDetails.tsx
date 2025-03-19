@@ -40,7 +40,9 @@ const EventDetails = () => {
     ? participations.find(
         p => p.userId === currentUser.id && p.eventId === event.id
       )
-    : null;
+    : participations.find(
+        p => p.eventId === event.id && p.attending && !p.userId
+      );
   
   const isAttending = userParticipation?.attending || false;
   
@@ -102,7 +104,10 @@ const EventDetails = () => {
             
             {isAttending && (
               <div className="mt-6">
-                <GamePreferences eventId={event.id} eventBoardgames={eventBoardgames} />
+                <GamePreferences 
+                  eventId={event.id} 
+                  eventBoardgames={eventBoardgames} 
+                />
               </div>
             )}
             

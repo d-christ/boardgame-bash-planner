@@ -44,7 +44,8 @@ export const useParticipationActions = ({
   const setAttendanceByName = (name: string, eventId: string, attending: boolean, userId?: string) => {
     const existingIndex = participations.findIndex(
       p => p.eventId === eventId && 
-        ((userId && p.userId === userId) || (!userId && p.attendeeName === name))
+        ((userId && p.userId === userId) || 
+         (!userId && p.attendeeName === name))
     );
 
     if (existingIndex >= 0) {
@@ -70,17 +71,37 @@ export const useParticipationActions = ({
   };
 
   const updateRankings = (userId: string, eventId: string, rankings: Record<string, number>) => {
-    const existingIndex = participations.findIndex(
-      p => p.userId === userId && p.eventId === eventId
-    );
+    // Check if this is a guest user or a logged-in user
+    const isGuestParticipation = !participations.some(p => p.userId === userId);
+    
+    if (isGuestParticipation) {
+      // For guest participants, find by name instead
+      const existingIndex = participations.findIndex(
+        p => p.attendeeName === userId && p.eventId === eventId
+      );
+      
+      if (existingIndex >= 0) {
+        const updatedParticipations = [...participations];
+        updatedParticipations[existingIndex] = {
+          ...updatedParticipations[existingIndex],
+          rankings
+        };
+        setParticipations(updatedParticipations);
+      }
+    } else {
+      // For logged-in users, use userId as before
+      const existingIndex = participations.findIndex(
+        p => p.userId === userId && p.eventId === eventId
+      );
 
-    if (existingIndex >= 0) {
-      const updatedParticipations = [...participations];
-      updatedParticipations[existingIndex] = {
-        ...updatedParticipations[existingIndex],
-        rankings
-      };
-      setParticipations(updatedParticipations);
+      if (existingIndex >= 0) {
+        const updatedParticipations = [...participations];
+        updatedParticipations[existingIndex] = {
+          ...updatedParticipations[existingIndex],
+          rankings
+        };
+        setParticipations(updatedParticipations);
+      }
     }
     
     toast({
@@ -90,17 +111,37 @@ export const useParticipationActions = ({
   };
 
   const updateExcluded = (userId: string, eventId: string, excluded: string[]) => {
-    const existingIndex = participations.findIndex(
-      p => p.userId === userId && p.eventId === eventId
-    );
+    // Check if this is a guest user or a logged-in user
+    const isGuestParticipation = !participations.some(p => p.userId === userId);
+    
+    if (isGuestParticipation) {
+      // For guest participants, find by name instead
+      const existingIndex = participations.findIndex(
+        p => p.attendeeName === userId && p.eventId === eventId
+      );
+      
+      if (existingIndex >= 0) {
+        const updatedParticipations = [...participations];
+        updatedParticipations[existingIndex] = {
+          ...updatedParticipations[existingIndex],
+          excluded
+        };
+        setParticipations(updatedParticipations);
+      }
+    } else {
+      // For logged-in users, use userId as before
+      const existingIndex = participations.findIndex(
+        p => p.userId === userId && p.eventId === eventId
+      );
 
-    if (existingIndex >= 0) {
-      const updatedParticipations = [...participations];
-      updatedParticipations[existingIndex] = {
-        ...updatedParticipations[existingIndex],
-        excluded
-      };
-      setParticipations(updatedParticipations);
+      if (existingIndex >= 0) {
+        const updatedParticipations = [...participations];
+        updatedParticipations[existingIndex] = {
+          ...updatedParticipations[existingIndex],
+          excluded
+        };
+        setParticipations(updatedParticipations);
+      }
     }
     
     toast({
