@@ -10,6 +10,8 @@ import { format } from 'date-fns';
 import { BoardgameCard } from '@/components/boardgame/BoardgameCard';
 import { GamePreferences } from '@/components/participation/GamePreferences';
 import { AttendanceForm } from '@/components/participation/AttendanceForm';
+import { GameRankingsDashboard } from '@/components/admin/GameRankingsDashboard';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const EventDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -45,6 +47,7 @@ const EventDetails = () => {
       );
   
   const isAttending = userParticipation?.attending || false;
+  const isAdmin = currentUser?.isAdmin || false;
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -97,6 +100,60 @@ const EventDetails = () => {
                 </div>
               </CardContent>
             </Card>
+            
+            {/* Admin dashboard */}
+            {isAdmin && (
+              <Card className="mt-6">
+                <CardHeader>
+                  <CardTitle>Admin Dashboard</CardTitle>
+                  <CardDescription>
+                    Review game preferences to help organize the event
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Tabs defaultValue="rankings">
+                    <TabsList className="mb-6">
+                      <TabsTrigger value="rankings">Game Rankings</TabsTrigger>
+                      <TabsTrigger value="attendees">Attendees</TabsTrigger>
+                    </TabsList>
+                    
+                    <TabsContent value="rankings">
+                      <GameRankingsDashboard eventId={event.id} eventBoardgames={eventBoardgames} />
+                    </TabsContent>
+                    
+                    <TabsContent value="attendees">
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Attendees ({attendees.length})</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          {attendees.length === 0 ? (
+                            <p className="text-muted-foreground">No one has signed up yet.</p>
+                          ) : (
+                            <ul className="space-y-2">
+                              {attendees.map((attendee) => {
+                                const user = attendee.userId ? 
+                                  useApp().users.find(u => u.id === attendee.userId) : null;
+                                
+                                return (
+                                  <li key={attendee.userId || attendee.attendeeName} className="flex items-center">
+                                    <Users className="h-4 w-4 mr-2 text-green-500" />
+                                    {user?.name || attendee.attendeeName || 'Unknown Attendee'}
+                                    {user?.isAdmin && (
+                                      <Badge variant="outline" className="ml-2">Admin</Badge>
+                                    )}
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </TabsContent>
+                  </Tabs>
+                </CardContent>
+              </Card>
+            )}
           </div>
           
           <div>
@@ -111,33 +168,35 @@ const EventDetails = () => {
               </div>
             )}
             
-            <Card className="mt-6">
-              <CardHeader>
-                <CardTitle>Attendees ({attendees.length})</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {attendees.length === 0 ? (
-                  <p className="text-muted-foreground">No one has signed up yet. Be the first!</p>
-                ) : (
-                  <ul className="space-y-2">
-                    {attendees.map((attendee) => {
-                      const user = attendee.userId ? 
-                        useApp().users.find(u => u.id === attendee.userId) : null;
-                      
-                      return (
-                        <li key={attendee.userId || attendee.attendeeName} className="flex items-center">
-                          <Users className="h-4 w-4 mr-2 text-green-500" />
-                          {user?.name || attendee.attendeeName || 'Unknown Attendee'}
-                          {user?.isAdmin && (
-                            <Badge variant="outline" className="ml-2">Admin</Badge>
-                          )}
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-              </CardContent>
-            </Card>
+            {!isAdmin && (
+              <Card className="mt-6">
+                <CardHeader>
+                  <CardTitle>Attendees ({attendees.length})</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {attendees.length === 0 ? (
+                    <p className="text-muted-foreground">No one has signed up yet. Be the first!</p>
+                  ) : (
+                    <ul className="space-y-2">
+                      {attendees.map((attendee) => {
+                        const user = attendee.userId ? 
+                          useApp().users.find(u => u.id === attendee.userId) : null;
+                        
+                        return (
+                          <li key={attendee.userId || attendee.attendeeName} className="flex items-center">
+                            <Users className="h-4 w-4 mr-2 text-green-500" />
+                            {user?.name || attendee.attendeeName || 'Unknown Attendee'}
+                            {user?.isAdmin && (
+                              <Badge variant="outline" className="ml-2">Admin</Badge>
+                            )}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       </main>
