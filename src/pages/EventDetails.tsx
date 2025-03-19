@@ -120,12 +120,12 @@ const EventDetails = () => {
                   <p className="text-muted-foreground">No one has signed up yet. Be the first!</p>
                 ) : (
                   <ul className="space-y-2">
-                    {attendees.map((attendee, index) => {
+                    {attendees.map((attendee) => {
                       const user = attendee.userId ? 
                         useApp().users.find(u => u.id === attendee.userId) : null;
                       
                       return (
-                        <li key={attendee.userId || index} className="flex items-center">
+                        <li key={attendee.userId || attendee.attendeeName} className="flex items-center">
                           <Users className="h-4 w-4 mr-2 text-green-500" />
                           {user?.name || attendee.attendeeName || 'Unknown Attendee'}
                           {user?.isAdmin && (

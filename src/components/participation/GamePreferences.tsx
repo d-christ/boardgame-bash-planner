@@ -130,7 +130,8 @@ export const GamePreferences = ({ eventId, eventBoardgames }: GamePreferencesPro
   };
   
   // Get complexity class - helper function
-  const getComplexityClass = (rating: number) => {
+  const getComplexityClass = (rating: number | undefined) => {
+    if (!rating) return 'complexity-light';
     if (rating <= 1.5) return 'complexity-light';
     if (rating <= 2.5) return 'complexity-medium-light';
     if (rating <= 3.5) return 'complexity-medium';
@@ -139,8 +140,8 @@ export const GamePreferences = ({ eventId, eventBoardgames }: GamePreferencesPro
   };
   
   // Helper function to format complexity
-  const formatComplexity = (rating: number) => {
-    return rating.toFixed(1);
+  const formatComplexity = (rating: number | undefined) => {
+    return rating?.toFixed(1) || 'N/A';
   };
   
   return (
