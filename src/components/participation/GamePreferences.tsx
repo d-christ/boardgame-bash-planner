@@ -35,9 +35,16 @@ export const GamePreferences = ({ eventId, eventBoardgames }: GamePreferencesPro
     return userId || guestName || '';
   };
   
+  // Debug logging
+  console.log("Participations data:", participations);
+  console.log("Event participations:", participations.filter(p => p.eventId === eventId && p.attending));
+  console.log("Checking participation for:", userId);
+  console.log("Rankings:", userParticipation?.rankings);
+  
   // Initialize state from participation
   useEffect(() => {
     if (!userParticipation) {
+      console.log("No user participation found, initializing with default values");
       // If no participation, show all games unranked
       setGameList(eventBoardgames.map(game => ({ ...game, rank: 0 })));
       setExcluded([]);
