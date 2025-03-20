@@ -95,15 +95,18 @@ export const useParticipationActions = ({
       // Create a deep copy of the participations array
       const updatedParticipations = [...participations];
       
-      // Update the rankings for the found participation
+      // Create a deep copy of the participation object to modify
       const updatedParticipation = {
         ...updatedParticipations[participationIndex],
-        rankings
+        rankings: { ...rankings } // Create a new object with the rankings to ensure it's not a reference
       };
       
+      // Update the participation in the array
       updatedParticipations[participationIndex] = updatedParticipation;
       
       console.log("Updated participation:", updatedParticipation);
+      
+      // Update state
       setParticipations(updatedParticipations);
       
       // Save to localStorage immediately to ensure persistence

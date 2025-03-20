@@ -27,7 +27,7 @@ export const GamePreferences = ({ eventId, eventBoardgames }: GamePreferencesPro
       : undefined;
   
   // Initialize state
-  const [gameList, setGameList] = useState<Array<Boardgame & { rank?: number }>>([]);
+  const [gameList, setGameList] = useState<Array<Boardgame & { rank: number }>>([]);
   const [excluded, setExcluded] = useState<string[]>([]);
   
   // Helper to get actual participantId (userId or guestName)
@@ -39,7 +39,7 @@ export const GamePreferences = ({ eventId, eventBoardgames }: GamePreferencesPro
   useEffect(() => {
     if (!userParticipation) {
       // If no participation, show all games unranked
-      setGameList(eventBoardgames.map(game => ({ ...game })));
+      setGameList(eventBoardgames.map(game => ({ ...game, rank: 0 })));
       setExcluded([]);
       return;
     }
@@ -57,7 +57,7 @@ export const GamePreferences = ({ eventId, eventBoardgames }: GamePreferencesPro
     // Map games with their rankings
     const mappedGames = includedGames.map(game => ({
       ...game,
-      rank: userParticipation.rankings?.[game.id]
+      rank: userParticipation.rankings?.[game.id] || 0  // Default to 0 if no rank
     }));
     
     // Sort by rank (if available)
@@ -101,7 +101,7 @@ export const GamePreferences = ({ eventId, eventBoardgames }: GamePreferencesPro
       // Add back to the list at the end
       const gameToAdd = eventBoardgames.find(g => g.id === gameId);
       if (gameToAdd) {
-        setGameList([...gameList, gameToAdd]);
+        setGameList([...gameList, { ...gameToAdd, rank: 0 }]);
       }
     } else {
       // Add to excluded
