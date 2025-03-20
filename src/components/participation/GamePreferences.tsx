@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Boardgame } from '@/types';
 import { useApp } from '@/context';
@@ -15,75 +14,71 @@ interface GamePreferencesProps {
 export const GamePreferences = ({ eventId, eventBoardgames }: GamePreferencesProps) => {
   const { currentUser, participations, updateRankings, updateExcluded } = useApp();
   
-  // Get user's participation data
-  const userId = currentUser ? currentUser.id : undefined;
-  const guestName = !currentUser ? participations.find(p => p.eventId === eventId && p.attending && !p.userId)?.attendeeName : undefined;
+  // Get participant identifier (user ID or guest name)
+  const participantId = currentUser ? currentUser.id : 
+    participations.find(p => p.eventId === eventId && p.attending && !p.userId)?.attendeeName || '';
   
-  // Find the correct participation record
-  const userParticipation = userId 
-    ? participations.find(p => p.userId === userId && p.eventId === eventId)
-    : guestName 
-      ? participations.find(p => p.attendeeName === guestName && p.eventId === eventId) 
-      : undefined;
+  // Find user's participation record
+  const userParticipation = participations.find(p => 
+    p.eventId === eventId && 
+    (p.userId === participantId || p.attendeeName === participantId)
+  );
   
-  // Initialize state
+  // Initialize states
   const [gameList, setGameList] = useState<Array<Boardgame & { rank: number }>>([]);
   const [excluded, setExcluded] = useState<string[]>([]);
   
-  // Helper to get actual participantId (userId or guestName)
-  const getParticipantId = () => {
-    return userId || guestName || '';
-  };
-  
   // Debug logging
-  console.log("Participations data:", participations);
-  console.log("Event participations:", participations.filter(p => p.eventId === eventId && p.attending));
-  console.log("Checking participation for:", userId);
-  console.log("Rankings:", userParticipation?.rankings);
+  console.log("GAME PREFS - Participant ID:", participantId);
+  console.log("GAME PREFS - User participation:", userParticipation);
+  console.log("GAME PREFS - Excluded games:", userParticipation?.excluded);
+  console.log("GAME PREFS - Rankings:", userParticipation?.rankings);
   
-  // Initialize state from participation
+  // Initialize state from participation data
   useEffect(() => {
     if (!userParticipation) {
-      console.log("No user participation found, initializing with default values");
-      // If no participation, show all games unranked
+      console.log("GAME PREFS - No participation found, using defaults");
       setGameList(eventBoardgames.map(game => ({ ...game, rank: 0 })));
       setExcluded([]);
       return;
     }
     
-    console.log("Loading user participation:", userParticipation);
-    
     // Set excluded games
-    setExcluded(userParticipation.excluded || []);
+    const excludedList = userParticipation.excluded || [];
+    console.log("GAME PREFS - Setting excluded list:", excludedList);
+    setExcluded(excludedList);
     
-    // Filter out excluded games
-    const includedGames = eventBoardgames.filter(
-      game => !userParticipation.excluded?.includes(game.id)
+    // Get includedGames (not in excluded list)
+    const includedGames = eventBoardgames.filter(game => 
+      !excludedList.includes(game.id)
     );
     
-    // Map games with their rankings
-    const mappedGames = includedGames.map(game => ({
-      ...game,
-      rank: userParticipation.rankings?.[game.id] || 0  // Default to 0 if no rank
-    }));
+    // Create game list with rankings
+    const rankedGames = includedGames.map(game => {
+      const rank = userParticipation.rankings?.[game.id] || 0;
+      return { ...game, rank };
+    });
     
-    // Sort by rank (if available)
-    const sortedGames = [...mappedGames].sort((a, b) => {
-      // If both have ranks, sort by rank
-      if (a.rank && b.rank) return a.rank - b.rank;
-      // If only a has rank, a comes first
-      if (a.rank) return -1;
-      // If only b has rank, b comes first
-      if (b.rank) return 1;
-      // If neither has rank, maintain original order
+    // Sort by rank (higher ranks first)
+    const sortedGames = [...rankedGames].sort((a, b) => {
+      // If both have ranks > 0, sort by rank
+      if (a.rank > 0 && b.rank > 0) {
+        return a.rank - b.rank;
+      }
+      // If only a has rank, it comes first
+      if (a.rank > 0) return -1;
+      // If only b has rank, it comes first
+      if (b.rank > 0) return 1;
+      // If neither has rank, keep original order
       return 0;
     });
     
-    console.log("Setting game list:", sortedGames);
+    console.log("GAME PREFS - Setting game list:", sortedGames);
     setGameList(sortedGames);
     
   }, [userParticipation, eventBoardgames]);
   
+  // Move a game up in the list
   const moveGameUp = (index: number) => {
     if (index <= 0) return;
     
@@ -92,6 +87,7 @@ export const GamePreferences = ({ eventId, eventBoardgames }: GamePreferencesPro
     setGameList(newList);
   };
   
+  // Move a game down in the list
   const moveGameDown = (index: number) => {
     if (index >= gameList.length - 1) return;
     
@@ -100,6 +96,7 @@ export const GamePreferences = ({ eventId, eventBoardgames }: GamePreferencesPro
     setGameList(newList);
   };
   
+  // Toggle a game's excluded status
   const toggleExcluded = (gameId: string) => {
     if (excluded.includes(gameId)) {
       // Remove from excluded
@@ -119,23 +116,25 @@ export const GamePreferences = ({ eventId, eventBoardgames }: GamePreferencesPro
     }
   };
   
+  // Save preferences
   const savePreferences = () => {
-    const participantId = getParticipantId();
-    
     if (!participantId) {
-      console.error("Cannot save preferences: No user ID or guest name found");
+      console.error("GAME PREFS - Cannot save: No participant ID found");
       return;
     }
     
-    // Convert ordered list to rankings
+    console.log("GAME PREFS - Saving preferences for:", participantId);
+    
+    // Create rankings object with current order
     const rankings: Record<string, number> = {};
     
-    // Assign ranks based on current order (1-based)
+    // Assign ranks (1-based ranking)
     gameList.forEach((game, index) => {
       rankings[game.id] = index + 1;
     });
     
-    console.log("Saving rankings for:", participantId, "Event ID:", eventId, "Rankings:", rankings);
+    console.log("GAME PREFS - New rankings to save:", rankings);
+    console.log("GAME PREFS - New exclusions to save:", excluded);
     
     // Update rankings
     updateRankings(participantId, eventId, rankings);
@@ -144,7 +143,7 @@ export const GamePreferences = ({ eventId, eventBoardgames }: GamePreferencesPro
     updateExcluded(participantId, eventId, excluded);
   };
   
-  // Get complexity class
+  // Get CSS class for complexity
   const getComplexityClass = (rating: number | undefined) => {
     if (!rating) return 'complexity-light';
     if (rating <= 1.5) return 'complexity-light';
@@ -154,7 +153,7 @@ export const GamePreferences = ({ eventId, eventBoardgames }: GamePreferencesPro
     return 'complexity-heavy';
   };
   
-  // Format complexity
+  // Format complexity rating
   const formatComplexity = (rating: number | undefined) => {
     return rating?.toFixed(1) || 'N/A';
   };

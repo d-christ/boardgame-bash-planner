@@ -1,4 +1,3 @@
-
 import { Dispatch, SetStateAction } from 'react';
 import { Participation } from '@/types';
 import { ToastType } from '@/hooks/use-toast';
@@ -70,120 +69,87 @@ export const useParticipationActions = ({
     });
   };
 
-  // Completely reimplemented ranking update function
   const updateRankings = (userId: string, eventId: string, rankings: Record<string, number>) => {
-    console.log("Starting rankings update for user/guest:", userId, "Event:", eventId);
-    console.log("New rankings to save:", rankings);
+    console.log("RANKINGS UPDATE - Starting with:", { userId, eventId, rankings });
     
-    // Create a new array to avoid mutation
-    const newParticipations = [...participations];
+    const updatedParticipations = [...participations];
     
-    // First, try to find the participant by userId if it's a logged-in user
-    let participantIndex = -1;
-    if (userId) {
-      participantIndex = newParticipations.findIndex(
-        p => p.userId === userId && p.eventId === eventId
-      );
-    }
-    
-    // If not found and might be a guest
-    if (participantIndex === -1) {
-      participantIndex = newParticipations.findIndex(
-        p => p.attendeeName === userId && p.eventId === eventId
-      );
-    }
-    
-    console.log("Found participant at index:", participantIndex);
+    const participantIndex = updatedParticipations.findIndex(
+      p => (p.userId === userId || p.attendeeName === userId) && p.eventId === eventId
+    );
     
     if (participantIndex === -1) {
-      // No participation record found
-      console.error("No participation record found for:", userId);
+      console.error("RANKINGS ERROR - No participation found for", userId, "in event", eventId);
       toast({
         title: "Error Saving Preferences",
-        description: "Unable to find your RSVP record. Please try again or contact the organizer.",
+        description: "Could not find your participation record.",
         variant: "destructive"
       });
       return;
     }
     
-    // Create a completely new object for the updated participation
+    console.log("RANKINGS UPDATE - Found participant at index:", participantIndex);
+    console.log("RANKINGS UPDATE - Current participation:", updatedParticipations[participantIndex]);
+    
     const updatedParticipation = {
-      ...newParticipations[participantIndex],
-      rankings: { ...rankings } // Make a copy of the rankings
+      ...updatedParticipations[participantIndex],
+      rankings: { ...rankings }
     };
     
-    // Replace the participation with our new one
-    newParticipations[participantIndex] = updatedParticipation;
+    console.log("RANKINGS UPDATE - New participation object:", updatedParticipation);
     
-    console.log("Updated participation record:", updatedParticipation);
+    updatedParticipations[participantIndex] = updatedParticipation;
     
-    // Update state with the new array
-    setParticipations(newParticipations);
+    setParticipations(updatedParticipations);
     
-    // Immediately update localStorage for persistence
-    localStorage.setItem('participations', JSON.stringify(newParticipations));
+    console.log("RANKINGS UPDATE - Saving to localStorage:", updatedParticipations);
+    localStorage.setItem('participations', JSON.stringify(updatedParticipations));
     
     toast({
       title: "Preferences Saved",
-      description: "Your game preferences have been updated."
+      description: "Your game rankings have been updated successfully."
     });
   };
 
   const updateExcluded = (userId: string, eventId: string, excluded: string[]) => {
-    console.log("Starting exclusions update for user/guest:", userId, "Event:", eventId);
-    console.log("New exclusions to save:", excluded);
+    console.log("EXCLUSIONS UPDATE - Starting with:", { userId, eventId, excluded });
     
-    // Create a new array to avoid mutation
-    const newParticipations = [...participations];
+    const updatedParticipations = [...participations];
     
-    // Try to find the participant by userId if it's a logged-in user
-    let participantIndex = -1;
-    if (userId) {
-      participantIndex = newParticipations.findIndex(
-        p => p.userId === userId && p.eventId === eventId
-      );
-    }
-    
-    // If not found and might be a guest
-    if (participantIndex === -1) {
-      participantIndex = newParticipations.findIndex(
-        p => p.attendeeName === userId && p.eventId === eventId
-      );
-    }
-    
-    console.log("Found participant at index:", participantIndex);
+    const participantIndex = updatedParticipations.findIndex(
+      p => (p.userId === userId || p.attendeeName === userId) && p.eventId === eventId
+    );
     
     if (participantIndex === -1) {
-      // No participation record found
-      console.error("No participation record found for:", userId);
+      console.error("EXCLUSIONS ERROR - No participation found for", userId, "in event", eventId);
       toast({
         title: "Error Saving Exclusions",
-        description: "Unable to find your RSVP record. Please try again or contact the organizer.",
+        description: "Could not find your participation record.",
         variant: "destructive"
       });
       return;
     }
     
-    // Create a completely new object for the updated participation
+    console.log("EXCLUSIONS UPDATE - Found participant at index:", participantIndex);
+    console.log("EXCLUSIONS UPDATE - Current participation:", updatedParticipations[participantIndex]);
+    
     const updatedParticipation = {
-      ...newParticipations[participantIndex],
-      excluded: [...excluded] // Make a copy of the excluded array
+      ...updatedParticipations[participantIndex],
+      excluded: [...excluded]
     };
     
-    // Replace the participation with our new one
-    newParticipations[participantIndex] = updatedParticipation;
+    console.log("EXCLUSIONS UPDATE - New participation object:", updatedParticipation);
     
-    console.log("Updated participation record:", updatedParticipation);
+    updatedParticipations[participantIndex] = updatedParticipation;
     
-    // Update state with the new array
-    setParticipations(newParticipations);
+    setParticipations(updatedParticipations);
     
-    // Immediately update localStorage for persistence
-    localStorage.setItem('participations', JSON.stringify(newParticipations));
+    console.log("EXCLUSIONS UPDATE - Saving to localStorage:", updatedParticipations);
+    localStorage.setItem('participations', JSON.stringify(updatedParticipations));
     
     toast({
       title: "Exclusions Saved",
-      description: "Your game exclusions have been updated."
+      description: "Your game exclusions have been updated successfully."
     });
   };
 
