@@ -73,74 +73,87 @@ export const useParticipationActions = ({
   const updateRankings = (userId: string, eventId: string, rankings: Record<string, number>) => {
     console.log("Updating rankings:", userId, eventId, rankings);
     
-    // Check if this is a guest user or a logged-in user
-    const isGuestParticipation = !participations.some(p => p.userId === userId);
+    let participationIndex = -1;
     
-    let existingIndex = -1;
-    
-    if (isGuestParticipation) {
-      // For guest participants, find by name instead
-      existingIndex = participations.findIndex(
-        p => p.attendeeName === userId && p.eventId === eventId
-      );
-      
-      console.log("Guest participation index:", existingIndex, "Name:", userId);
-    } else {
-      // For logged-in users, use userId as before
-      existingIndex = participations.findIndex(
+    // First try to find by userId for logged-in users
+    if (userId) {
+      participationIndex = participations.findIndex(
         p => p.userId === userId && p.eventId === eventId
       );
-
-      console.log("User participation index:", existingIndex, "ID:", userId);
     }
     
-    if (existingIndex >= 0) {
+    // If not found and might be a guest (userId is actually the attendee name)
+    if (participationIndex === -1) {
+      participationIndex = participations.findIndex(
+        p => p.attendeeName === userId && p.eventId === eventId
+      );
+    }
+    
+    console.log("Participation index:", participationIndex);
+    
+    if (participationIndex >= 0) {
+      // Create a deep copy of the participations array
       const updatedParticipations = [...participations];
-      updatedParticipations[existingIndex] = {
-        ...updatedParticipations[existingIndex],
-        rankings
+      
+      // Update the rankings for the found participation
+      updatedParticipations[participationIndex] = {
+        ...updatedParticipations[participationIndex],
+        rankings: { ...rankings } // Make a copy of the rankings object
       };
-      console.log("Updated participation:", updatedParticipations[existingIndex]);
+      
+      console.log("Updated participation:", updatedParticipations[participationIndex]);
       setParticipations(updatedParticipations);
+      
+      toast({
+        title: "Preferences Saved",
+        description: "Your game preferences have been updated."
+      });
+    } else {
+      console.error("No participation found for userId/name:", userId);
+      toast({
+        title: "Error Saving Preferences",
+        description: "Unable to find your RSVP record. Please try again or contact the organizer.",
+        variant: "destructive"
+      });
     }
-    
-    toast({
-      title: "Preferences Saved",
-      description: "Your game preferences have been updated."
-    });
   };
 
   const updateExcluded = (userId: string, eventId: string, excluded: string[]) => {
-    // Check if this is a guest user or a logged-in user
-    const isGuestParticipation = !participations.some(p => p.userId === userId);
+    let participationIndex = -1;
     
-    let existingIndex = -1;
-    
-    if (isGuestParticipation) {
-      // For guest participants, find by name instead
-      existingIndex = participations.findIndex(
-        p => p.attendeeName === userId && p.eventId === eventId
-      );
-    } else {
-      // For logged-in users, use userId as before
-      existingIndex = participations.findIndex(
+    // First try to find by userId for logged-in users
+    if (userId) {
+      participationIndex = participations.findIndex(
         p => p.userId === userId && p.eventId === eventId
       );
     }
     
-    if (existingIndex >= 0) {
+    // If not found and might be a guest (userId is actually the attendee name)
+    if (participationIndex === -1) {
+      participationIndex = participations.findIndex(
+        p => p.attendeeName === userId && p.eventId === eventId
+      );
+    }
+    
+    if (participationIndex >= 0) {
       const updatedParticipations = [...participations];
-      updatedParticipations[existingIndex] = {
-        ...updatedParticipations[existingIndex],
+      updatedParticipations[participationIndex] = {
+        ...updatedParticipations[participationIndex],
         excluded
       };
       setParticipations(updatedParticipations);
+      
+      toast({
+        title: "Exclusions Saved",
+        description: "Your game exclusions have been updated."
+      });
+    } else {
+      toast({
+        title: "Error Saving Exclusions",
+        description: "Unable to find your RSVP record. Please try again or contact the organizer.",
+        variant: "destructive"
+      });
     }
-    
-    toast({
-      title: "Exclusions Saved",
-      description: "Your game exclusions have been updated."
-    });
   };
 
   return { setParticipation, setAttendanceByName, updateRankings, updateExcluded };
