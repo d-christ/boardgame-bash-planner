@@ -96,13 +96,18 @@ export const useParticipationActions = ({
       const updatedParticipations = [...participations];
       
       // Update the rankings for the found participation
-      updatedParticipations[participationIndex] = {
+      const updatedParticipation = {
         ...updatedParticipations[participationIndex],
-        rankings: { ...rankings } // Make a copy of the rankings object
+        rankings
       };
       
-      console.log("Updated participation:", updatedParticipations[participationIndex]);
+      updatedParticipations[participationIndex] = updatedParticipation;
+      
+      console.log("Updated participation:", updatedParticipation);
       setParticipations(updatedParticipations);
+      
+      // Save to localStorage immediately to ensure persistence
+      localStorage.setItem('participations', JSON.stringify(updatedParticipations));
       
       toast({
         title: "Preferences Saved",

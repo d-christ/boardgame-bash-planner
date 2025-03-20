@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { ArrowUp, ArrowDown, GripVertical, Save } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 
 interface GamePreferencesProps {
   eventId: string;
@@ -73,6 +72,7 @@ export const GamePreferences = ({ eventId, eventBoardgames }: GamePreferencesPro
       return 0;
     });
     
+    console.log("Setting game list:", sortedGames);
     setGameList(sortedGames);
     
   }, [userParticipation, eventBoardgames]);
