@@ -73,16 +73,15 @@ export const useParticipationActions = ({
   const updateRankings = (userId: string, eventId: string, rankings: Record<string, number>) => {
     console.log("[RANKINGS] Starting update with:", { userId, eventId, rankings });
     
-    // Create a fresh copy of participations
-    const updatedParticipations = [...participations];
-    
-    // Find the participant by userId OR attendeeName
-    const participantIndex = updatedParticipations.findIndex(
-      p => p.eventId === eventId && (p.userId === userId || p.attendeeName === userId)
+    // Find the participant index
+    const participantIndex = participations.findIndex(
+      p => p.eventId === eventId && 
+           (p.userId === userId || (!p.userId && p.attendeeName === userId))
     );
     
     if (participantIndex === -1) {
-      console.error("[RANKINGS] No participation found for", userId, "in event", eventId);
+      console.error("[RANKINGS] No participation found for:", userId, "in event:", eventId);
+      console.log("[RANKINGS] All participations:", JSON.stringify(participations));
       toast({
         title: "Error Saving Preferences",
         description: "Could not find your participation record.",
@@ -92,12 +91,15 @@ export const useParticipationActions = ({
     }
     
     console.log("[RANKINGS] Found participant at index:", participantIndex);
-    console.log("[RANKINGS] Current participation:", updatedParticipations[participantIndex]);
+    console.log("[RANKINGS] Current participation:", participations[participantIndex]);
     
-    // Create a completely new object to ensure state update
+    // Create completely new arrays and objects to ensure React state updates
+    const updatedParticipations = [...participations];
+    
+    // Create a new participation object with the updated rankings
     const updatedParticipation = {
       ...updatedParticipations[participantIndex],
-      rankings
+      rankings: { ...rankings } // Create a new rankings object
     };
     
     console.log("[RANKINGS] New participation object:", updatedParticipation);
@@ -121,16 +123,15 @@ export const useParticipationActions = ({
   const updateExcluded = (userId: string, eventId: string, excluded: string[]) => {
     console.log("[EXCLUSIONS] Starting update with:", { userId, eventId, excluded });
     
-    // Create a fresh copy of participations
-    const updatedParticipations = [...participations];
-    
-    // Find the participant by userId OR attendeeName
-    const participantIndex = updatedParticipations.findIndex(
-      p => p.eventId === eventId && (p.userId === userId || p.attendeeName === userId)
+    // Find the participant index
+    const participantIndex = participations.findIndex(
+      p => p.eventId === eventId && 
+           (p.userId === userId || (!p.userId && p.attendeeName === userId))
     );
     
     if (participantIndex === -1) {
-      console.error("[EXCLUSIONS] No participation found for", userId, "in event", eventId);
+      console.error("[EXCLUSIONS] No participation found for:", userId, "in event:", eventId);
+      console.log("[EXCLUSIONS] All participations:", JSON.stringify(participations));
       toast({
         title: "Error Saving Exclusions",
         description: "Could not find your participation record.",
@@ -140,12 +141,15 @@ export const useParticipationActions = ({
     }
     
     console.log("[EXCLUSIONS] Found participant at index:", participantIndex);
-    console.log("[EXCLUSIONS] Current participation:", updatedParticipations[participantIndex]);
+    console.log("[EXCLUSIONS] Current participation:", participations[participantIndex]);
     
-    // Create a completely new object to ensure state update
+    // Create completely new arrays and objects to ensure React state updates
+    const updatedParticipations = [...participations];
+    
+    // Create a new participation object with the updated exclusions
     const updatedParticipation = {
       ...updatedParticipations[participantIndex],
-      excluded
+      excluded: [...excluded] // Create a new excluded array
     };
     
     console.log("[EXCLUSIONS] New participation object:", updatedParticipation);

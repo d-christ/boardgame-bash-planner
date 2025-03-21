@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Boardgame } from '@/types';
 import { useApp } from '@/context';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,7 +19,7 @@ export const GamePreferences = ({ eventId, eventBoardgames }: GamePreferencesPro
   const participantId = currentUser ? currentUser.id : 
     (participations.find(p => p.eventId === eventId && p.attending && !p.userId)?.attendeeName || '');
   
-  // Initialize states with empty values
+  // Initialize states
   const [gameList, setGameList] = useState<Array<Boardgame & { rank: number }>>([]);
   const [excluded, setExcluded] = useState<string[]>([]);
   const [initialized, setInitialized] = useState(false);
@@ -29,13 +29,15 @@ export const GamePreferences = ({ eventId, eventBoardgames }: GamePreferencesPro
   // Find user's participation record
   const userParticipation = participations.find(p => 
     p.eventId === eventId && 
-    (p.userId === participantId || p.attendeeName === participantId)
+    ((p.userId && p.userId === participantId) || 
+     (!p.userId && p.attendeeName === participantId))
   );
   
   console.log("[GAME_PREFS] Found participation:", userParticipation);
+  console.log("[GAME_PREFS] All participations:", JSON.stringify(participations));
   
-  // Initialize state from participation data
-  useEffect(() => {
+  // Memoize the initialization function
+  const initializeGamePreferences = useCallback(() => {
     if (!participantId) {
       console.log("[GAME_PREFS] No participant ID found, skipping initialization");
       return;
@@ -76,8 +78,12 @@ export const GamePreferences = ({ eventId, eventBoardgames }: GamePreferencesPro
     console.log("[GAME_PREFS] Setting game list:", sortedGames);
     setGameList(sortedGames);
     setInitialized(true);
-    
-  }, [participantId, userParticipation, eventBoardgames]);
+  }, [participantId, eventBoardgames, userParticipation]);
+  
+  // Initialize state from participation data
+  useEffect(() => {
+    initializeGamePreferences();
+  }, [initializeGamePreferences]);
   
   // Move a game up in the list
   const moveGameUp = (index: number) => {
@@ -129,7 +135,7 @@ export const GamePreferences = ({ eventId, eventBoardgames }: GamePreferencesPro
     // Create rankings object with current order
     const rankings: Record<string, number> = {};
     
-    // Assign ranks (1-based ranking)
+    // Assign ranks based on current order (1-based ranking)
     gameList.forEach((game, index) => {
       rankings[game.id] = index + 1;
     });
@@ -140,8 +146,14 @@ export const GamePreferences = ({ eventId, eventBoardgames }: GamePreferencesPro
     // Update rankings first
     updateRankings(participantId, eventId, rankings);
     
-    // Then update exclusions
-    updateExcluded(participantId, eventId, excluded);
+    // Wait a short time to ensure rankings are saved before updating exclusions
+    setTimeout(() => {
+      // Then update exclusions
+      updateExcluded(participantId, eventId, excluded);
+      
+      // Reinitialize the preferences to ensure everything is synced
+      setTimeout(initializeGamePreferences, 100);
+    }, 100);
   };
   
   // Get CSS class for complexity
@@ -159,7 +171,7 @@ export const GamePreferences = ({ eventId, eventBoardgames }: GamePreferencesPro
     return rating?.toFixed(1) || 'N/A';
   };
   
-  // If no participant ID, don't render
+  // If no participant ID, don't render preferences
   if (!participantId) {
     return (
       <Card>
