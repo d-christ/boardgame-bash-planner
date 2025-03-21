@@ -94,11 +94,22 @@ export const useParticipationActions = ({
   const updateRankings = (userId: string, eventId: string, rankings: Record<string, number>) => {
     console.log("[RANKINGS] Starting update with:", { userId, eventId, rankings });
     
-    // Find the participant index
+    // Find the participant index with more precise identification
     const participantIndex = participations.findIndex(
       p => p.eventId === eventId && 
-           (p.userId === userId || (!p.userId && p.attendeeName === userId))
+           (
+             // Check if userId is a numeric ID (likely a user ID)
+             (userId.match(/^[0-9]+$/) && p.userId === userId) || 
+             // If not numeric, it's likely a guest name
+             (!userId.match(/^[0-9]+$/) && p.attendeeName === userId)
+           )
     );
+    
+    console.log("[RANKINGS] Participant search result:", { 
+      participantIndex, 
+      matchType: userId.match(/^[0-9]+$/) ? 'userId' : 'attendeeName',
+      searchValue: userId
+    });
     
     if (participantIndex === -1) {
       console.error("[RANKINGS] No participation found for:", userId, "in event:", eventId);
@@ -132,6 +143,7 @@ export const useParticipationActions = ({
     
     console.log("[RANKINGS] Found participant at index:", participantIndex);
     console.log("[RANKINGS] Current participation:", participations[participantIndex]);
+    console.log("[RANKINGS] Rankings to save:", rankings);
     
     // Create a completely new array with the updated participation
     const updatedParticipations = [...participations];
@@ -139,7 +151,7 @@ export const useParticipationActions = ({
     // Create a new participation object with the updated rankings
     updatedParticipations[participantIndex] = {
       ...updatedParticipations[participantIndex],
-      rankings: { ...rankings } // Create a new rankings object
+      rankings // Directly assign the rankings object (simplified)
     };
     
     console.log("[RANKINGS] New participation object:", updatedParticipations[participantIndex]);
@@ -156,11 +168,22 @@ export const useParticipationActions = ({
   const updateExcluded = (userId: string, eventId: string, excluded: string[]) => {
     console.log("[EXCLUSIONS] Starting update with:", { userId, eventId, excluded });
     
-    // Find the participant index
+    // Find the participant index with more precise identification
     const participantIndex = participations.findIndex(
       p => p.eventId === eventId && 
-           (p.userId === userId || (!p.userId && p.attendeeName === userId))
+           (
+             // Check if userId is a numeric ID (likely a user ID)
+             (userId.match(/^[0-9]+$/) && p.userId === userId) || 
+             // If not numeric, it's likely a guest name
+             (!userId.match(/^[0-9]+$/) && p.attendeeName === userId)
+           )
     );
+    
+    console.log("[EXCLUSIONS] Participant search result:", { 
+      participantIndex, 
+      matchType: userId.match(/^[0-9]+$/) ? 'userId' : 'attendeeName',
+      searchValue: userId
+    });
     
     if (participantIndex === -1) {
       console.error("[EXCLUSIONS] No participation found for:", userId, "in event:", eventId);
@@ -201,7 +224,7 @@ export const useParticipationActions = ({
     // Create a new participation object with the updated exclusions
     updatedParticipations[participantIndex] = {
       ...updatedParticipations[participantIndex],
-      excluded: [...excluded] // Create a new excluded array
+      excluded // Directly assign the excluded array (simplified)
     };
     
     console.log("[EXCLUSIONS] New participation object:", updatedParticipations[participantIndex]);

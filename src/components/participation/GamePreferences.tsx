@@ -30,8 +30,8 @@ export const GamePreferences = ({ eventId, eventBoardgames }: GamePreferencesPro
   // Find user's participation record
   const userParticipation = participations.find(p => 
     p.eventId === eventId && 
-    ((p.userId && p.userId === participantId) || 
-     (!p.userId && p.attendeeName === participantId))
+    ((currentUser && p.userId === currentUser.id) || 
+     (!currentUser && p.attendeeName === participantId))
   );
   
   console.log("[GAME_PREFS] Found participation:", userParticipation);
@@ -51,8 +51,8 @@ export const GamePreferences = ({ eventId, eventBoardgames }: GamePreferencesPro
     const storedParticipations = JSON.parse(localStorage.getItem('participations') || '[]');
     const storedParticipation = storedParticipations.find((p: any) => 
       p.eventId === eventId && 
-      ((p.userId && p.userId === participantId) || 
-       (!p.userId && p.attendeeName === participantId))
+      ((currentUser && p.userId === currentUser.id) || 
+       (!currentUser && p.attendeeName === participantId))
     );
     
     // Use stored participation if available, otherwise use state participation
@@ -93,7 +93,7 @@ export const GamePreferences = ({ eventId, eventBoardgames }: GamePreferencesPro
     console.log("[GAME_PREFS] Setting game list:", sortedGames);
     setGameList(sortedGames);
     setInitialized(true);
-  }, [participantId, eventId, eventBoardgames, userParticipation]);
+  }, [participantId, eventId, eventBoardgames, userParticipation, currentUser]);
   
   // Initialize state from participation data
   useEffect(() => {
@@ -150,11 +150,12 @@ export const GamePreferences = ({ eventId, eventBoardgames }: GamePreferencesPro
     setIsSaving(true);
     console.log("[GAME_PREFS] Saving preferences for:", participantId);
     
-    // Create rankings object with current order
+    // Create rankings object with current order (1-based ranking)
     const rankings: Record<string, number> = {};
     
-    // Assign ranks based on current order (1-based ranking)
+    // Assign ranks based on current order
     gameList.forEach((game, index) => {
+      // Ensure all games have a rank value (even if it was 0 before)
       rankings[game.id] = index + 1;
     });
     
