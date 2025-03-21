@@ -75,7 +75,9 @@ export const GameRankingsDashboard = ({ eventId, eventBoardgames }: GameRankings
       if (participation.rankings) {
         Object.entries(participation.rankings).forEach(([gameId, rank]) => {
           if (aggregateRankings[gameId]) {
-            aggregateRankings[gameId].totalRank += rank;
+            // Add explicit type check and conversion to ensure we're adding numbers
+            const numericRank = typeof rank === 'number' ? rank : 0;
+            aggregateRankings[gameId].totalRank += numericRank;
             aggregateRankings[gameId].votesCount += 1;
           }
         });
