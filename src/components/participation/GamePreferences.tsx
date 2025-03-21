@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Boardgame } from '@/types';
 import { useApp } from '@/context';
@@ -16,7 +17,14 @@ export const GamePreferences = ({ eventId, eventBoardgames }: GamePreferencesPro
   
   // Get participant identifier (user ID or guest name)
   const participantId = currentUser ? currentUser.id : 
-    participations.find(p => p.eventId === eventId && p.attending && !p.userId)?.attendeeName || '';
+    (participations.find(p => p.eventId === eventId && p.attending && !p.userId)?.attendeeName || '');
+  
+  // Initialize states with empty values
+  const [gameList, setGameList] = useState<Array<Boardgame & { rank: number }>>([]);
+  const [excluded, setExcluded] = useState<string[]>([]);
+  const [initialized, setInitialized] = useState(false);
+  
+  console.log("[GAME_PREFS] Rendering with participantId:", participantId);
   
   // Find user's participation record
   const userParticipation = participations.find(p => 
@@ -24,59 +32,52 @@ export const GamePreferences = ({ eventId, eventBoardgames }: GamePreferencesPro
     (p.userId === participantId || p.attendeeName === participantId)
   );
   
-  // Initialize states
-  const [gameList, setGameList] = useState<Array<Boardgame & { rank: number }>>([]);
-  const [excluded, setExcluded] = useState<string[]>([]);
-  
-  // Debug logging
-  console.log("GAME PREFS - Participant ID:", participantId);
-  console.log("GAME PREFS - User participation:", userParticipation);
-  console.log("GAME PREFS - Excluded games:", userParticipation?.excluded);
-  console.log("GAME PREFS - Rankings:", userParticipation?.rankings);
+  console.log("[GAME_PREFS] Found participation:", userParticipation);
   
   // Initialize state from participation data
   useEffect(() => {
-    if (!userParticipation) {
-      console.log("GAME PREFS - No participation found, using defaults");
-      setGameList(eventBoardgames.map(game => ({ ...game, rank: 0 })));
-      setExcluded([]);
+    if (!participantId) {
+      console.log("[GAME_PREFS] No participant ID found, skipping initialization");
       return;
     }
     
-    // Set excluded games
-    const excludedList = userParticipation.excluded || [];
-    console.log("GAME PREFS - Setting excluded list:", excludedList);
-    setExcluded(excludedList);
+    console.log("[GAME_PREFS] Initializing game preferences");
     
-    // Get includedGames (not in excluded list)
+    // Set excluded games from participation or default to empty array
+    const excludedGames = userParticipation?.excluded || [];
+    console.log("[GAME_PREFS] Excluded games:", excludedGames);
+    setExcluded(excludedGames);
+    
+    // Get rankings from participation or default to empty object
+    const savedRankings = userParticipation?.rankings || {};
+    console.log("[GAME_PREFS] Saved rankings:", savedRankings);
+    
+    // Filter games that are not excluded
     const includedGames = eventBoardgames.filter(game => 
-      !excludedList.includes(game.id)
+      !excludedGames.includes(game.id)
     );
     
-    // Create game list with rankings
-    const rankedGames = includedGames.map(game => {
-      const rank = userParticipation.rankings?.[game.id] || 0;
-      return { ...game, rank };
-    });
+    // Create ranked game list
+    const rankedGames = includedGames.map(game => ({
+      ...game,
+      rank: savedRankings[game.id] || 0
+    }));
     
-    // Sort by rank (higher ranks first)
+    // Sort games by rank (higher ranks first)
     const sortedGames = [...rankedGames].sort((a, b) => {
-      // If both have ranks > 0, sort by rank
       if (a.rank > 0 && b.rank > 0) {
         return a.rank - b.rank;
       }
-      // If only a has rank, it comes first
       if (a.rank > 0) return -1;
-      // If only b has rank, it comes first
       if (b.rank > 0) return 1;
-      // If neither has rank, keep original order
       return 0;
     });
     
-    console.log("GAME PREFS - Setting game list:", sortedGames);
+    console.log("[GAME_PREFS] Setting game list:", sortedGames);
     setGameList(sortedGames);
+    setInitialized(true);
     
-  }, [userParticipation, eventBoardgames]);
+  }, [participantId, userParticipation, eventBoardgames]);
   
   // Move a game up in the list
   const moveGameUp = (index: number) => {
@@ -118,12 +119,12 @@ export const GamePreferences = ({ eventId, eventBoardgames }: GamePreferencesPro
   
   // Save preferences
   const savePreferences = () => {
-    if (!participantId) {
-      console.error("GAME PREFS - Cannot save: No participant ID found");
+    if (!participantId || !initialized) {
+      console.error("[GAME_PREFS] Cannot save: No participant ID found or not initialized");
       return;
     }
     
-    console.log("GAME PREFS - Saving preferences for:", participantId);
+    console.log("[GAME_PREFS] Saving preferences for:", participantId);
     
     // Create rankings object with current order
     const rankings: Record<string, number> = {};
@@ -133,13 +134,13 @@ export const GamePreferences = ({ eventId, eventBoardgames }: GamePreferencesPro
       rankings[game.id] = index + 1;
     });
     
-    console.log("GAME PREFS - New rankings to save:", rankings);
-    console.log("GAME PREFS - New exclusions to save:", excluded);
+    console.log("[GAME_PREFS] Rankings to save:", rankings);
+    console.log("[GAME_PREFS] Exclusions to save:", excluded);
     
-    // Update rankings
+    // Update rankings first
     updateRankings(participantId, eventId, rankings);
     
-    // Update exclusions
+    // Then update exclusions
     updateExcluded(participantId, eventId, excluded);
   };
   
@@ -157,6 +158,20 @@ export const GamePreferences = ({ eventId, eventBoardgames }: GamePreferencesPro
   const formatComplexity = (rating: number | undefined) => {
     return rating?.toFixed(1) || 'N/A';
   };
+  
+  // If no participant ID, don't render
+  if (!participantId) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Game Preferences</CardTitle>
+          <CardDescription>
+            You need to RSVP to this event to set game preferences.
+          </CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
   
   return (
     <Card>

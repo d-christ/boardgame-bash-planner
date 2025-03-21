@@ -1,3 +1,4 @@
+
 import { Dispatch, SetStateAction } from 'react';
 import { Participation } from '@/types';
 import { ToastType } from '@/hooks/use-toast';
@@ -70,16 +71,18 @@ export const useParticipationActions = ({
   };
 
   const updateRankings = (userId: string, eventId: string, rankings: Record<string, number>) => {
-    console.log("RANKINGS UPDATE - Starting with:", { userId, eventId, rankings });
+    console.log("[RANKINGS] Starting update with:", { userId, eventId, rankings });
     
+    // Create a fresh copy of participations
     const updatedParticipations = [...participations];
     
+    // Find the participant by userId OR attendeeName
     const participantIndex = updatedParticipations.findIndex(
-      p => (p.userId === userId || p.attendeeName === userId) && p.eventId === eventId
+      p => p.eventId === eventId && (p.userId === userId || p.attendeeName === userId)
     );
     
     if (participantIndex === -1) {
-      console.error("RANKINGS ERROR - No participation found for", userId, "in event", eventId);
+      console.error("[RANKINGS] No participation found for", userId, "in event", eventId);
       toast({
         title: "Error Saving Preferences",
         description: "Could not find your participation record.",
@@ -88,21 +91,25 @@ export const useParticipationActions = ({
       return;
     }
     
-    console.log("RANKINGS UPDATE - Found participant at index:", participantIndex);
-    console.log("RANKINGS UPDATE - Current participation:", updatedParticipations[participantIndex]);
+    console.log("[RANKINGS] Found participant at index:", participantIndex);
+    console.log("[RANKINGS] Current participation:", updatedParticipations[participantIndex]);
     
+    // Create a completely new object to ensure state update
     const updatedParticipation = {
       ...updatedParticipations[participantIndex],
-      rankings: { ...rankings }
+      rankings
     };
     
-    console.log("RANKINGS UPDATE - New participation object:", updatedParticipation);
+    console.log("[RANKINGS] New participation object:", updatedParticipation);
     
+    // Update the array
     updatedParticipations[participantIndex] = updatedParticipation;
     
+    // Update state
     setParticipations(updatedParticipations);
     
-    console.log("RANKINGS UPDATE - Saving to localStorage:", updatedParticipations);
+    // Explicitly save to localStorage
+    console.log("[RANKINGS] Saving to localStorage:", JSON.stringify(updatedParticipations));
     localStorage.setItem('participations', JSON.stringify(updatedParticipations));
     
     toast({
@@ -112,16 +119,18 @@ export const useParticipationActions = ({
   };
 
   const updateExcluded = (userId: string, eventId: string, excluded: string[]) => {
-    console.log("EXCLUSIONS UPDATE - Starting with:", { userId, eventId, excluded });
+    console.log("[EXCLUSIONS] Starting update with:", { userId, eventId, excluded });
     
+    // Create a fresh copy of participations
     const updatedParticipations = [...participations];
     
+    // Find the participant by userId OR attendeeName
     const participantIndex = updatedParticipations.findIndex(
-      p => (p.userId === userId || p.attendeeName === userId) && p.eventId === eventId
+      p => p.eventId === eventId && (p.userId === userId || p.attendeeName === userId)
     );
     
     if (participantIndex === -1) {
-      console.error("EXCLUSIONS ERROR - No participation found for", userId, "in event", eventId);
+      console.error("[EXCLUSIONS] No participation found for", userId, "in event", eventId);
       toast({
         title: "Error Saving Exclusions",
         description: "Could not find your participation record.",
@@ -130,21 +139,25 @@ export const useParticipationActions = ({
       return;
     }
     
-    console.log("EXCLUSIONS UPDATE - Found participant at index:", participantIndex);
-    console.log("EXCLUSIONS UPDATE - Current participation:", updatedParticipations[participantIndex]);
+    console.log("[EXCLUSIONS] Found participant at index:", participantIndex);
+    console.log("[EXCLUSIONS] Current participation:", updatedParticipations[participantIndex]);
     
+    // Create a completely new object to ensure state update
     const updatedParticipation = {
       ...updatedParticipations[participantIndex],
-      excluded: [...excluded]
+      excluded
     };
     
-    console.log("EXCLUSIONS UPDATE - New participation object:", updatedParticipation);
+    console.log("[EXCLUSIONS] New participation object:", updatedParticipation);
     
+    // Update the array
     updatedParticipations[participantIndex] = updatedParticipation;
     
+    // Update state
     setParticipations(updatedParticipations);
     
-    console.log("EXCLUSIONS UPDATE - Saving to localStorage:", updatedParticipations);
+    // Explicitly save to localStorage
+    console.log("[EXCLUSIONS] Saving to localStorage:", JSON.stringify(updatedParticipations));
     localStorage.setItem('participations', JSON.stringify(updatedParticipations));
     
     toast({
