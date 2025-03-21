@@ -23,6 +23,7 @@ export const GamePreferences = ({ eventId, eventBoardgames }: GamePreferencesPro
   const [gameList, setGameList] = useState<Array<Boardgame & { rank: number }>>([]);
   const [excluded, setExcluded] = useState<string[]>([]);
   const [initialized, setInitialized] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   
   console.log("[GAME_PREFS] Rendering with participantId:", participantId);
   
@@ -34,7 +35,8 @@ export const GamePreferences = ({ eventId, eventBoardgames }: GamePreferencesPro
   );
   
   console.log("[GAME_PREFS] Found participation:", userParticipation);
-  console.log("[GAME_PREFS] All participations:", JSON.stringify(participations));
+  console.log("[GAME_PREFS] Current participations in localStorage:",
+    JSON.parse(localStorage.getItem('participations') || '[]'));
   
   // Memoize the initialization function
   const initializeGamePreferences = useCallback(() => {
@@ -45,13 +47,26 @@ export const GamePreferences = ({ eventId, eventBoardgames }: GamePreferencesPro
     
     console.log("[GAME_PREFS] Initializing game preferences");
     
+    // Try to get the latest data from localStorage directly
+    const storedParticipations = JSON.parse(localStorage.getItem('participations') || '[]');
+    const storedParticipation = storedParticipations.find((p: any) => 
+      p.eventId === eventId && 
+      ((p.userId && p.userId === participantId) || 
+       (!p.userId && p.attendeeName === participantId))
+    );
+    
+    // Use stored participation if available, otherwise use state participation
+    const participation = storedParticipation || userParticipation;
+    
+    console.log("[GAME_PREFS] Using participation:", participation);
+    
     // Set excluded games from participation or default to empty array
-    const excludedGames = userParticipation?.excluded || [];
+    const excludedGames = participation?.excluded || [];
     console.log("[GAME_PREFS] Excluded games:", excludedGames);
     setExcluded(excludedGames);
     
     // Get rankings from participation or default to empty object
-    const savedRankings = userParticipation?.rankings || {};
+    const savedRankings = participation?.rankings || {};
     console.log("[GAME_PREFS] Saved rankings:", savedRankings);
     
     // Filter games that are not excluded
@@ -78,12 +93,14 @@ export const GamePreferences = ({ eventId, eventBoardgames }: GamePreferencesPro
     console.log("[GAME_PREFS] Setting game list:", sortedGames);
     setGameList(sortedGames);
     setInitialized(true);
-  }, [participantId, eventBoardgames, userParticipation]);
+  }, [participantId, eventId, eventBoardgames, userParticipation]);
   
   // Initialize state from participation data
   useEffect(() => {
-    initializeGamePreferences();
-  }, [initializeGamePreferences]);
+    if (!isSaving) {
+      initializeGamePreferences();
+    }
+  }, [initializeGamePreferences, participations, isSaving]);
   
   // Move a game up in the list
   const moveGameUp = (index: number) => {
@@ -124,12 +141,13 @@ export const GamePreferences = ({ eventId, eventBoardgames }: GamePreferencesPro
   };
   
   // Save preferences
-  const savePreferences = () => {
+  const savePreferences = async () => {
     if (!participantId || !initialized) {
       console.error("[GAME_PREFS] Cannot save: No participant ID found or not initialized");
       return;
     }
     
+    setIsSaving(true);
     console.log("[GAME_PREFS] Saving preferences for:", participantId);
     
     // Create rankings object with current order
@@ -143,17 +161,31 @@ export const GamePreferences = ({ eventId, eventBoardgames }: GamePreferencesPro
     console.log("[GAME_PREFS] Rankings to save:", rankings);
     console.log("[GAME_PREFS] Exclusions to save:", excluded);
     
-    // Update rankings first
-    updateRankings(participantId, eventId, rankings);
-    
-    // Wait a short time to ensure rankings are saved before updating exclusions
-    setTimeout(() => {
+    try {
+      // Update rankings first
+      updateRankings(participantId, eventId, rankings);
+      
+      // Wait a short time to ensure rankings are saved
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
       // Then update exclusions
       updateExcluded(participantId, eventId, excluded);
       
-      // Reinitialize the preferences to ensure everything is synced
-      setTimeout(initializeGamePreferences, 100);
-    }, 100);
+      // Wait another short time for everything to persist
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      console.log("[GAME_PREFS] Saved successfully, refreshing from localStorage");
+      
+      // Verify storage
+      const storedData = localStorage.getItem('participations');
+      console.log("[GAME_PREFS] Current localStorage state:", storedData);
+      
+    } catch (error) {
+      console.error("[GAME_PREFS] Error saving preferences:", error);
+    } finally {
+      // Allow reinitialization after saving is complete
+      setTimeout(() => setIsSaving(false), 100);
+    }
   };
   
   // Get CSS class for complexity
@@ -294,9 +326,13 @@ export const GamePreferences = ({ eventId, eventBoardgames }: GamePreferencesPro
         </div>
       </CardContent>
       <CardFooter>
-        <Button onClick={savePreferences} className="w-full">
+        <Button 
+          onClick={savePreferences} 
+          className="w-full"
+          disabled={isSaving}
+        >
           <Save className="mr-2 h-4 w-4" />
-          Save Preferences
+          {isSaving ? "Saving..." : "Save Preferences"}
         </Button>
       </CardFooter>
     </Card>

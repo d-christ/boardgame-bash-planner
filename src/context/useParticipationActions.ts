@@ -14,24 +14,41 @@ export const useParticipationActions = ({
   setParticipations,
   toast
 }: UseParticipationActionsProps) => {
+  const persistParticipations = (updatedParticipations: Participation[]) => {
+    // Update state first
+    setParticipations(updatedParticipations);
+    
+    // Then explicitly save to localStorage
+    try {
+      localStorage.setItem('participations', JSON.stringify(updatedParticipations));
+      console.log("[PERSISTENCE] Successfully saved participations to localStorage", updatedParticipations);
+    } catch (error) {
+      console.error("[PERSISTENCE] Failed to save participations to localStorage:", error);
+      toast({
+        title: "Save Error",
+        description: "Could not save your preferences. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const setParticipation = (userId: string, eventId: string, attending: boolean) => {
     const existingIndex = participations.findIndex(
       p => p.userId === userId && p.eventId === eventId
     );
 
+    const updatedParticipations = [...participations];
+    
     if (existingIndex >= 0) {
-      const updatedParticipations = [...participations];
       updatedParticipations[existingIndex] = {
         ...updatedParticipations[existingIndex],
         attending
       };
-      setParticipations(updatedParticipations);
     } else {
-      setParticipations([
-        ...participations,
-        { userId, eventId, attending }
-      ]);
+      updatedParticipations.push({ userId, eventId, attending });
     }
+    
+    persistParticipations(updatedParticipations);
     
     toast({
       title: attending ? "You're Going!" : "RSVP Updated",
@@ -48,19 +65,23 @@ export const useParticipationActions = ({
          (!userId && p.attendeeName === name))
     );
 
+    const updatedParticipations = [...participations];
+    
     if (existingIndex >= 0) {
-      const updatedParticipations = [...participations];
       updatedParticipations[existingIndex] = {
         ...updatedParticipations[existingIndex],
         attending
       };
-      setParticipations(updatedParticipations);
     } else {
-      setParticipations([
-        ...participations,
-        { userId, attendeeName: !userId ? name : undefined, eventId, attending }
-      ]);
+      updatedParticipations.push({ 
+        userId, 
+        attendeeName: !userId ? name : undefined, 
+        eventId, 
+        attending 
+      });
     }
+    
+    persistParticipations(updatedParticipations);
     
     toast({
       title: attending ? "RSVP Confirmed!" : "RSVP Cancelled",
@@ -82,37 +103,49 @@ export const useParticipationActions = ({
     if (participantIndex === -1) {
       console.error("[RANKINGS] No participation found for:", userId, "in event:", eventId);
       console.log("[RANKINGS] All participations:", JSON.stringify(participations));
+      
+      // Create new participation if none exists
+      const newParticipation: Participation = {
+        eventId,
+        attending: true,
+        rankings: { ...rankings }
+      };
+      
+      // Add userId or attendeeName based on what was provided
+      if (userId.match(/^[0-9]+$/)) {
+        newParticipation.userId = userId;
+      } else {
+        newParticipation.attendeeName = userId;
+      }
+      
+      const updatedParticipations = [...participations, newParticipation];
+      
+      persistParticipations(updatedParticipations);
+      
       toast({
-        title: "Error Saving Preferences",
-        description: "Could not find your participation record.",
-        variant: "destructive"
+        title: "Preferences Saved",
+        description: "Your game rankings have been saved successfully."
       });
+      
       return;
     }
     
     console.log("[RANKINGS] Found participant at index:", participantIndex);
     console.log("[RANKINGS] Current participation:", participations[participantIndex]);
     
-    // Create completely new arrays and objects to ensure React state updates
+    // Create a completely new array with the updated participation
     const updatedParticipations = [...participations];
     
     // Create a new participation object with the updated rankings
-    const updatedParticipation = {
+    updatedParticipations[participantIndex] = {
       ...updatedParticipations[participantIndex],
       rankings: { ...rankings } // Create a new rankings object
     };
     
-    console.log("[RANKINGS] New participation object:", updatedParticipation);
+    console.log("[RANKINGS] New participation object:", updatedParticipations[participantIndex]);
     
-    // Update the array
-    updatedParticipations[participantIndex] = updatedParticipation;
-    
-    // Update state
-    setParticipations(updatedParticipations);
-    
-    // Explicitly save to localStorage
-    console.log("[RANKINGS] Saving to localStorage:", JSON.stringify(updatedParticipations));
-    localStorage.setItem('participations', JSON.stringify(updatedParticipations));
+    // Persist the updated participations
+    persistParticipations(updatedParticipations);
     
     toast({
       title: "Preferences Saved",
@@ -132,37 +165,49 @@ export const useParticipationActions = ({
     if (participantIndex === -1) {
       console.error("[EXCLUSIONS] No participation found for:", userId, "in event:", eventId);
       console.log("[EXCLUSIONS] All participations:", JSON.stringify(participations));
+      
+      // Create new participation if none exists
+      const newParticipation: Participation = {
+        eventId,
+        attending: true,
+        excluded: [...excluded]
+      };
+      
+      // Add userId or attendeeName based on what was provided
+      if (userId.match(/^[0-9]+$/)) {
+        newParticipation.userId = userId;
+      } else {
+        newParticipation.attendeeName = userId;
+      }
+      
+      const updatedParticipations = [...participations, newParticipation];
+      
+      persistParticipations(updatedParticipations);
+      
       toast({
-        title: "Error Saving Exclusions",
-        description: "Could not find your participation record.",
-        variant: "destructive"
+        title: "Exclusions Saved",
+        description: "Your game exclusions have been saved successfully."
       });
+      
       return;
     }
     
     console.log("[EXCLUSIONS] Found participant at index:", participantIndex);
     console.log("[EXCLUSIONS] Current participation:", participations[participantIndex]);
     
-    // Create completely new arrays and objects to ensure React state updates
+    // Create a completely new array with the updated participation
     const updatedParticipations = [...participations];
     
     // Create a new participation object with the updated exclusions
-    const updatedParticipation = {
+    updatedParticipations[participantIndex] = {
       ...updatedParticipations[participantIndex],
       excluded: [...excluded] // Create a new excluded array
     };
     
-    console.log("[EXCLUSIONS] New participation object:", updatedParticipation);
+    console.log("[EXCLUSIONS] New participation object:", updatedParticipations[participantIndex]);
     
-    // Update the array
-    updatedParticipations[participantIndex] = updatedParticipation;
-    
-    // Update state
-    setParticipations(updatedParticipations);
-    
-    // Explicitly save to localStorage
-    console.log("[EXCLUSIONS] Saving to localStorage:", JSON.stringify(updatedParticipations));
-    localStorage.setItem('participations', JSON.stringify(updatedParticipations));
+    // Persist the updated participations
+    persistParticipations(updatedParticipations);
     
     toast({
       title: "Exclusions Saved",
