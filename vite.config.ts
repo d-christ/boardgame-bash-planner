@@ -28,9 +28,9 @@ export default defineConfig(({ mode }) => {
     define: {
       // Define fallback values for Supabase environment variables when not provided
       'import.meta.env.VITE_SUPABASE_URL': 
-        JSON.stringify(env.VITE_SUPABASE_URL || 'https://example.supabase.co'),
+        JSON.stringify(env.VITE_SUPABASE_URL || ''),
       'import.meta.env.VITE_SUPABASE_ANON_KEY':
-        JSON.stringify(env.VITE_SUPABASE_ANON_KEY || 'your-anon-key'),
+        JSON.stringify(env.VITE_SUPABASE_ANON_KEY || ''),
     },
   }
 });
