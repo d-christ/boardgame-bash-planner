@@ -1,3 +1,4 @@
+
 import { supabase } from '@/lib/supabase';
 import { Boardgame, Event, Participation, User } from '@/types';
 import { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
@@ -541,20 +542,28 @@ export const initializeDatabase = async () => {
 
     // Create admin user in auth system if not exists
     try {
-      const { data: existingUser } = await supabase.auth.admin.getUserByEmail('admin@boardgamebash.com');
+      // Check if admin user exists by trying to sign in
+      // This is a workaround since we can't use admin APIs in browser
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: 'admin@boardgamebash.com',
+        password: 'admin'
+      });
       
-      if (!existingUser) {
-        // Create the admin user in auth.users
-        const { error } = await supabase.auth.signUp({
+      if (error && error.status === 400) {
+        // User doesn't exist, create the admin user
+        const { error: signUpError } = await supabase.auth.signUp({
           email: 'admin@boardgamebash.com',
           password: 'admin',
         });
         
-        if (error) {
-          console.error('Error creating admin auth user:', error);
+        if (signUpError) {
+          console.error('Error creating admin auth user:', signUpError);
         } else {
           console.log('Admin auth user created successfully');
         }
+      } else if (!error) {
+        // User exists, sign out after check
+        await supabase.auth.signOut();
       }
     } catch (authError) {
       console.error('Error checking/creating admin auth user:', authError);
