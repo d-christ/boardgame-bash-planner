@@ -1,59 +1,12 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { Boardgame, Event, Participation, User } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { useBoardgameActions } from './useBoardgameActions';
 import { useEventActions } from './useEventActions';
 import { useParticipationActions } from './useParticipationActions';
 import { useUserActions } from './useUserActions';
-
-// Mock users for demo purposes
-const mockUsers: User[] = [
-  { id: '1', name: 'Admin User', isAdmin: true },
-  { id: '2', name: 'Regular User', isAdmin: false },
-];
-
-// Sample boardgames for demo
-const initialBoardgames: Boardgame[] = [
-  {
-    id: '1',
-    title: 'Catan',
-    description: 'Build settlements, trade resources, and compete for longest road in this classic strategy game.',
-    complexityRating: 2.3,
-    bggUrl: 'https://boardgamegeek.com/boardgame/13/catan',
-    videoUrl: 'https://www.youtube.com/watch?v=cPhX_1RiwEg',
-    imageUrl: 'https://cf.geekdo-images.com/W3Bsga_uLP9kO91gZ7H8yw__imagepage/img/M_3Vg1j2HlNgkv7PL2xl2BJE2bw=/fit-in/900x600/filters:no_upscale():strip_icc()/pic2419375.jpg'
-  },
-  {
-    id: '2',
-    title: 'Ticket to Ride',
-    description: 'Collect cards, build train routes, and connect cities across North America in this railway adventure.',
-    complexityRating: 1.8,
-    bggUrl: 'https://boardgamegeek.com/boardgame/9209/ticket-ride',
-    videoUrl: 'https://www.youtube.com/watch?v=4JhFhyvGdik',
-    imageUrl: 'https://cf.geekdo-images.com/ZWJg0dCdrWHxVnc0eFXK8w__imagepage/img/FcSGmLeIStNfKMMCh_nWTBkMIQM=/fit-in/900x600/filters:no_upscale():strip_icc()/pic38668.jpg'
-  },
-  {
-    id: '3',
-    title: 'Gloomhaven',
-    description: 'A campaign-based dungeon crawl game with legacy elements and tactical combat.',
-    complexityRating: 3.9,
-    bggUrl: 'https://boardgamegeek.com/boardgame/174430/gloomhaven',
-    videoUrl: 'https://www.youtube.com/watch?v=mKc5XhvkR6Y',
-    imageUrl: 'https://cf.geekdo-images.com/sZYp_3BTDGjh2unaZfZmuA__imagepage/img/Go-ks7YXaLPDLkyl5-sYnfA_QXs=/fit-in/900x600/filters:no_upscale():strip_icc()/pic2437871.jpg'
-  }
-];
-
-// Sample events for demo
-const initialEvents: Event[] = [
-  {
-    id: '1',
-    title: 'Saturday Game Night',
-    description: 'Weekly gaming session with a focus on strategy games',
-    date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 1 week from now
-    boardgames: ['1', '2']
-  }
-];
+import * as supabaseService from '@/services/supabaseService';
 
 export interface AppContextType {
   // Data
@@ -88,41 +41,64 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { toast } = useToast();
-  const [boardgames, setBoardgames] = useState<Boardgame[]>(() => {
-    const saved = localStorage.getItem('boardgames');
-    return saved ? JSON.parse(saved) : initialBoardgames;
-  });
-  
-  const [events, setEvents] = useState<Event[]>(() => {
-    const saved = localStorage.getItem('events');
-    return saved ? JSON.parse(saved) : initialEvents;
-  });
-  
-  const [participations, setParticipations] = useState<Participation[]>(() => {
-    const saved = localStorage.getItem('participations');
-    return saved ? JSON.parse(saved) : [];
-  });
-  
-  const [users] = useState<User[]>(mockUsers);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [boardgames, setBoardgames] = useState<Boardgame[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [participations, setParticipations] = useState<Participation[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
     const savedUserId = localStorage.getItem('currentUserId');
-    if (savedUserId) {
-      return mockUsers.find(u => u.id === savedUserId) || null;
-    }
-    return null;
+    return null; // Wir setzen später den aktuellen Benutzer, wenn die Benutzerdaten geladen sind
   });
 
+  // Initialize Supabase and load data
   useEffect(() => {
-    localStorage.setItem('boardgames', JSON.stringify(boardgames));
-  }, [boardgames]);
+    const initializeApp = async () => {
+      try {
+        // Initialisiere Datenbank mit Demo-Daten, falls leer
+        await supabaseService.initializeDatabase();
+        setIsInitialized(true);
+      } catch (error) {
+        console.error('Error initializing app:', error);
+        toast({
+          title: "Initialization Error",
+          description: "Could not initialize the application. Please refresh the page.",
+          variant: "destructive"
+        });
+      }
+    };
 
-  useEffect(() => {
-    localStorage.setItem('events', JSON.stringify(events));
-  }, [events]);
+    initializeApp();
+  }, [toast]);
 
+  // Set up Supabase subscriptions
   useEffect(() => {
-    localStorage.setItem('participations', JSON.stringify(participations));
-  }, [participations]);
+    if (!isInitialized) return;
+
+    const boardgamesUnsub = supabaseService.subscribeToBoardgames(setBoardgames);
+    const eventsUnsub = supabaseService.subscribeToEvents(setEvents);
+    const participationsUnsub = supabaseService.subscribeToParticipations(setParticipations);
+    const usersUnsub = supabaseService.subscribeToUsers((newUsers) => {
+      setUsers(newUsers);
+      
+      // Setze den aktuellen Benutzer, wenn Benutzerdaten geladen sind
+      const savedUserId = localStorage.getItem('currentUserId');
+      if (savedUserId) {
+        const user = newUsers.find(u => u.id === savedUserId);
+        if (user) {
+          setCurrentUser(user);
+        }
+      }
+    });
+
+    // Cleanup subscriptions
+    return () => {
+      boardgamesUnsub();
+      eventsUnsub();
+      participationsUnsub();
+      usersUnsub();
+    };
+  }, [isInitialized]);
 
   // Initialize action hooks
   const boardgameActions = useBoardgameActions({
@@ -152,6 +128,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setCurrentUser,
     toast
   });
+
+  if (!isInitialized) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-xl font-semibold mb-2">Loading Boardgame Bash...</h1>
+          <p className="text-muted-foreground">Connecting to database...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <AppContext.Provider

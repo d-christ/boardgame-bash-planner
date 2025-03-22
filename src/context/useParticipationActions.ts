@@ -2,6 +2,7 @@
 import { Dispatch, SetStateAction } from 'react';
 import { Participation } from '@/types';
 import { ToastType } from '@/hooks/use-toast';
+import * as supabaseService from '@/services/supabaseService';
 
 interface UseParticipationActionsProps {
   participations: Participation[];
@@ -14,228 +15,228 @@ export const useParticipationActions = ({
   setParticipations,
   toast
 }: UseParticipationActionsProps) => {
-  const persistParticipations = (updatedParticipations: Participation[]) => {
-    // Update state first
-    setParticipations(updatedParticipations);
-    
-    // Then explicitly save to localStorage
+  const setParticipation = async (userId: string, eventId: string, attending: boolean) => {
     try {
-      localStorage.setItem('participations', JSON.stringify(updatedParticipations));
-      console.log("[PERSISTENCE] Successfully saved participations to localStorage", updatedParticipations);
-    } catch (error) {
-      console.error("[PERSISTENCE] Failed to save participations to localStorage:", error);
+      const participation: Participation = {
+        userId,
+        eventId,
+        attending
+      };
+      
+      await supabaseService.createOrUpdateParticipation(participation);
+      
+      // Lokalen State aktualisieren für sofortige UI-Aktualisierung
+      // (Supabase-Subscription wird den State später synchronisieren)
+      const existingIndex = participations.findIndex(
+        p => p.userId === userId && p.eventId === eventId
+      );
+      
+      const updatedParticipations = [...participations];
+      
+      if (existingIndex >= 0) {
+        updatedParticipations[existingIndex] = {
+          ...updatedParticipations[existingIndex],
+          attending
+        };
+      } else {
+        updatedParticipations.push(participation);
+      }
+      
+      setParticipations(updatedParticipations);
+      
       toast({
-        title: "Save Error",
-        description: "Could not save your preferences. Please try again.",
+        title: attending ? "You're Going!" : "RSVP Updated",
+        description: attending 
+          ? "You've been added to the event attendees." 
+          : "You've been removed from the event attendees."
+      });
+    } catch (error) {
+      console.error('Error updating participation:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update your RSVP. Please try again.",
         variant: "destructive"
       });
     }
   };
 
-  const setParticipation = (userId: string, eventId: string, attending: boolean) => {
-    const existingIndex = participations.findIndex(
-      p => p.userId === userId && p.eventId === eventId
-    );
-
-    const updatedParticipations = [...participations];
-    
-    if (existingIndex >= 0) {
-      updatedParticipations[existingIndex] = {
-        ...updatedParticipations[existingIndex],
-        attending
-      };
-    } else {
-      updatedParticipations.push({ userId, eventId, attending });
-    }
-    
-    persistParticipations(updatedParticipations);
-    
-    toast({
-      title: attending ? "You're Going!" : "RSVP Updated",
-      description: attending 
-        ? "You've been added to the event attendees." 
-        : "You've been removed from the event attendees."
-    });
-  };
-
-  const setAttendanceByName = (name: string, eventId: string, attending: boolean, userId?: string) => {
-    const existingIndex = participations.findIndex(
-      p => p.eventId === eventId && 
-        ((userId && p.userId === userId) || 
-         (!userId && p.attendeeName === name))
-    );
-
-    const updatedParticipations = [...participations];
-    
-    if (existingIndex >= 0) {
-      updatedParticipations[existingIndex] = {
-        ...updatedParticipations[existingIndex],
-        attending
-      };
-    } else {
-      updatedParticipations.push({ 
-        userId, 
-        attendeeName: !userId ? name : undefined, 
-        eventId, 
-        attending 
-      });
-    }
-    
-    persistParticipations(updatedParticipations);
-    
-    toast({
-      title: attending ? "RSVP Confirmed!" : "RSVP Cancelled",
-      description: attending 
-        ? `${name} has been added to the event attendees.` 
-        : `${name} has been removed from the event attendees.`
-    });
-  };
-
-  const updateRankings = (userId: string, eventId: string, rankings: Record<string, number>) => {
-    console.log("[RANKINGS] Starting update with:", { userId, eventId, rankings });
-    
-    // Find the participant index with more precise identification
-    const participantIndex = participations.findIndex(
-      p => p.eventId === eventId && 
-           (
-             // Check if userId is a numeric ID (likely a user ID)
-             (userId.match(/^[0-9]+$/) && p.userId === userId) || 
-             // If not numeric, it's likely a guest name
-             (!userId.match(/^[0-9]+$/) && p.attendeeName === userId)
-           )
-    );
-    
-    console.log("[RANKINGS] Participant search result:", { 
-      participantIndex, 
-      matchType: userId.match(/^[0-9]+$/) ? 'userId' : 'attendeeName',
-      searchValue: userId
-    });
-    
-    if (participantIndex === -1) {
-      console.error("[RANKINGS] No participation found for:", userId, "in event:", eventId);
-      console.log("[RANKINGS] All participations:", JSON.stringify(participations));
-      
-      // Create new participation if none exists
-      const newParticipation: Participation = {
+  const setAttendanceByName = async (name: string, eventId: string, attending: boolean, userId?: string) => {
+    try {
+      const participation: Participation = {
+        userId,
+        attendeeName: !userId ? name : undefined,
         eventId,
-        attending: true,
-        rankings: { ...rankings }
+        attending
       };
       
-      // Add userId or attendeeName based on what was provided
-      if (userId.match(/^[0-9]+$/)) {
-        newParticipation.userId = userId;
+      await supabaseService.createOrUpdateParticipation(participation);
+      
+      // Lokalen State aktualisieren für sofortige UI-Aktualisierung
+      const existingIndex = participations.findIndex(
+        p => p.eventId === eventId && 
+          ((userId && p.userId === userId) || 
+           (!userId && p.attendeeName === name))
+      );
+      
+      const updatedParticipations = [...participations];
+      
+      if (existingIndex >= 0) {
+        updatedParticipations[existingIndex] = {
+          ...updatedParticipations[existingIndex],
+          attending
+        };
       } else {
-        newParticipation.attendeeName = userId;
+        updatedParticipations.push(participation);
       }
       
-      const updatedParticipations = [...participations, newParticipation];
+      setParticipations(updatedParticipations);
       
-      persistParticipations(updatedParticipations);
+      toast({
+        title: attending ? "RSVP Confirmed!" : "RSVP Cancelled",
+        description: attending 
+          ? `${name} has been added to the event attendees.` 
+          : `${name} has been removed from the event attendees.`
+      });
+    } catch (error) {
+      console.error('Error updating attendance by name:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update RSVP. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const updateRankings = async (userId: string, eventId: string, rankings: Record<string, number>) => {
+    try {
+      console.log("[RANKINGS] Starting update with:", { userId, eventId, rankings });
+      
+      // Prüfen, ob userId eine numerische ID oder ein Gästename ist
+      const isUserId = userId.match(/^[0-9]+$/);
+      
+      if (isUserId) {
+        await supabaseService.updateParticipationRankings(userId, undefined, eventId, rankings);
+      } else {
+        await supabaseService.updateParticipationRankings(undefined, userId, eventId, rankings);
+      }
+      
+      // Lokalen State aktualisieren für sofortige UI-Aktualisierung
+      const participantIndex = participations.findIndex(
+        p => p.eventId === eventId && 
+             (
+               (isUserId && p.userId === userId) || 
+               (!isUserId && p.attendeeName === userId)
+             )
+      );
+      
+      if (participantIndex === -1) {
+        console.log("[RANKINGS] Creating new participation with rankings");
+        
+        const newParticipation: Participation = {
+          eventId,
+          attending: true,
+          rankings: { ...rankings }
+        };
+        
+        // Add userId or attendeeName based on what was provided
+        if (isUserId) {
+          newParticipation.userId = userId;
+        } else {
+          newParticipation.attendeeName = userId;
+        }
+        
+        setParticipations(prev => [...prev, newParticipation]);
+      } else {
+        console.log("[RANKINGS] Updating existing participation with rankings");
+        
+        setParticipations(prev => {
+          const updated = [...prev];
+          updated[participantIndex] = {
+            ...updated[participantIndex],
+            rankings: { ...rankings }
+          };
+          return updated;
+        });
+      }
       
       toast({
         title: "Preferences Saved",
-        description: "Your game rankings have been saved successfully."
+        description: "Your game rankings have been updated successfully."
       });
-      
-      return;
+    } catch (error) {
+      console.error('Error updating rankings:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update game rankings. Please try again.",
+        variant: "destructive"
+      });
     }
-    
-    console.log("[RANKINGS] Found participant at index:", participantIndex);
-    console.log("[RANKINGS] Current participation:", participations[participantIndex]);
-    console.log("[RANKINGS] Rankings to save:", rankings);
-    
-    // Create a completely new array with the updated participation
-    const updatedParticipations = [...participations];
-    
-    // Create a new participation object with the updated rankings
-    updatedParticipations[participantIndex] = {
-      ...updatedParticipations[participantIndex],
-      rankings // Directly assign the rankings object (simplified)
-    };
-    
-    console.log("[RANKINGS] New participation object:", updatedParticipations[participantIndex]);
-    
-    // Persist the updated participations
-    persistParticipations(updatedParticipations);
-    
-    toast({
-      title: "Preferences Saved",
-      description: "Your game rankings have been updated successfully."
-    });
   };
 
-  const updateExcluded = (userId: string, eventId: string, excluded: string[]) => {
-    console.log("[EXCLUSIONS] Starting update with:", { userId, eventId, excluded });
-    
-    // Find the participant index with more precise identification
-    const participantIndex = participations.findIndex(
-      p => p.eventId === eventId && 
-           (
-             // Check if userId is a numeric ID (likely a user ID)
-             (userId.match(/^[0-9]+$/) && p.userId === userId) || 
-             // If not numeric, it's likely a guest name
-             (!userId.match(/^[0-9]+$/) && p.attendeeName === userId)
-           )
-    );
-    
-    console.log("[EXCLUSIONS] Participant search result:", { 
-      participantIndex, 
-      matchType: userId.match(/^[0-9]+$/) ? 'userId' : 'attendeeName',
-      searchValue: userId
-    });
-    
-    if (participantIndex === -1) {
-      console.error("[EXCLUSIONS] No participation found for:", userId, "in event:", eventId);
-      console.log("[EXCLUSIONS] All participations:", JSON.stringify(participations));
+  const updateExcluded = async (userId: string, eventId: string, excluded: string[]) => {
+    try {
+      console.log("[EXCLUSIONS] Starting update with:", { userId, eventId, excluded });
       
-      // Create new participation if none exists
-      const newParticipation: Participation = {
-        eventId,
-        attending: true,
-        excluded: [...excluded]
-      };
+      // Prüfen, ob userId eine numerische ID oder ein Gästename ist
+      const isUserId = userId.match(/^[0-9]+$/);
       
-      // Add userId or attendeeName based on what was provided
-      if (userId.match(/^[0-9]+$/)) {
-        newParticipation.userId = userId;
+      if (isUserId) {
+        await supabaseService.updateParticipationExcluded(userId, undefined, eventId, excluded);
       } else {
-        newParticipation.attendeeName = userId;
+        await supabaseService.updateParticipationExcluded(undefined, userId, eventId, excluded);
       }
       
-      const updatedParticipations = [...participations, newParticipation];
+      // Lokalen State aktualisieren für sofortige UI-Aktualisierung
+      const participantIndex = participations.findIndex(
+        p => p.eventId === eventId && 
+             (
+               (isUserId && p.userId === userId) || 
+               (!isUserId && p.attendeeName === userId)
+             )
+      );
       
-      persistParticipations(updatedParticipations);
+      if (participantIndex === -1) {
+        console.log("[EXCLUSIONS] Creating new participation with exclusions");
+        
+        const newParticipation: Participation = {
+          eventId,
+          attending: true,
+          excluded: [...excluded]
+        };
+        
+        // Add userId or attendeeName based on what was provided
+        if (isUserId) {
+          newParticipation.userId = userId;
+        } else {
+          newParticipation.attendeeName = userId;
+        }
+        
+        setParticipations(prev => [...prev, newParticipation]);
+      } else {
+        console.log("[EXCLUSIONS] Updating existing participation with exclusions");
+        
+        setParticipations(prev => {
+          const updated = [...prev];
+          updated[participantIndex] = {
+            ...updated[participantIndex],
+            excluded: [...excluded]
+          };
+          return updated;
+        });
+      }
       
       toast({
         title: "Exclusions Saved",
-        description: "Your game exclusions have been saved successfully."
+        description: "Your game exclusions have been updated successfully."
       });
-      
-      return;
+    } catch (error) {
+      console.error('Error updating exclusions:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update game exclusions. Please try again.",
+        variant: "destructive"
+      });
     }
-    
-    console.log("[EXCLUSIONS] Found participant at index:", participantIndex);
-    console.log("[EXCLUSIONS] Current participation:", participations[participantIndex]);
-    
-    // Create a completely new array with the updated participation
-    const updatedParticipations = [...participations];
-    
-    // Create a new participation object with the updated exclusions
-    updatedParticipations[participantIndex] = {
-      ...updatedParticipations[participantIndex],
-      excluded // Directly assign the excluded array (simplified)
-    };
-    
-    console.log("[EXCLUSIONS] New participation object:", updatedParticipations[participantIndex]);
-    
-    // Persist the updated participations
-    persistParticipations(updatedParticipations);
-    
-    toast({
-      title: "Exclusions Saved",
-      description: "Your game exclusions have been updated successfully."
-    });
   };
 
   return { setParticipation, setAttendanceByName, updateRankings, updateExcluded };

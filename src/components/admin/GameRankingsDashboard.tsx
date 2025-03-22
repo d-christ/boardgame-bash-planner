@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { 
   BarChart, 
@@ -33,14 +32,8 @@ export const GameRankingsDashboard = ({ eventId, eventBoardgames }: GameRankings
   useEffect(() => {
     if (!eventBoardgames.length) return;
     
-    // Try to get the latest data from localStorage directly
-    const storedParticipationsJson = localStorage.getItem('participations');
-    const storedParticipations = storedParticipationsJson 
-      ? JSON.parse(storedParticipationsJson) 
-      : participations;
-    
     // Get participations for this event
-    const eventParticipations = storedParticipations.filter(
+    const eventParticipations = participations.filter(
       (p: Participation) => p.eventId === eventId && p.attending
     );
     
