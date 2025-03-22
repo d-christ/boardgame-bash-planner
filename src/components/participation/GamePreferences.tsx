@@ -180,6 +180,25 @@ export const GamePreferences = ({ eventId, eventBoardgames }: GamePreferencesPro
       // Verify storage
       const storedData = localStorage.getItem('participations');
       console.log("[GAME_PREFS] Current localStorage state:", storedData);
+
+      // Explizit den localStorage mit den aktuellen Rankings aktualisieren
+      if (storedData) {
+        const storedParticipations = JSON.parse(storedData);
+        const participationIndex = storedParticipations.findIndex((p: Participation) => 
+          p.eventId === eventId && 
+          ((currentUser && p.userId === currentUser.id) || 
+          (!currentUser && p.attendeeName === participantId))
+        );
+  
+        if (participationIndex !== -1) {
+          // Die Rankings in der gespeicherten Teilnahme aktualisieren
+          storedParticipations[participationIndex].rankings = rankings;
+          
+          // Zurück in localStorage speichern
+          localStorage.setItem('participations', JSON.stringify(storedParticipations));
+          console.log("[GAME_PREFS] Explicitly updated localStorage with new rankings");
+        }
+      }
       
     } catch (error) {
       console.error("[GAME_PREFS] Error saving preferences:", error);
