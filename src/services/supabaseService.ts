@@ -1,4 +1,3 @@
-
 import { supabase } from '@/lib/supabase';
 import { Boardgame, Event, Participation, User } from '@/types';
 import { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
@@ -539,6 +538,28 @@ export const initializeDatabase = async () => {
     const { count: usersCount } = await supabase
       .from('users')
       .select('*', { count: 'exact', head: true });
+
+    // Create admin user in auth system if not exists
+    try {
+      const { data: existingUser } = await supabase.auth.admin.getUserByEmail('admin@boardgamebash.com');
+      
+      if (!existingUser) {
+        // Create the admin user in auth.users
+        const { error } = await supabase.auth.signUp({
+          email: 'admin@boardgamebash.com',
+          password: 'admin',
+        });
+        
+        if (error) {
+          console.error('Error creating admin auth user:', error);
+        } else {
+          console.log('Admin auth user created successfully');
+        }
+      }
+    } catch (authError) {
+      console.error('Error checking/creating admin auth user:', authError);
+      // Continue with initialization even if auth user creation fails
+    }
 
     // Wenn keine Daten vorhanden, initialisiere mit Demo-Daten
     if (boardgamesCount === 0) {
