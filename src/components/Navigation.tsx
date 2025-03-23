@@ -54,6 +54,8 @@ export const Navigation = () => {
     setIsLoading(true);
     
     try {
+      console.log("Attempting login with email:", email);
+      
       // Sign in using Supabase auth
       const { data, error } = await supabase.auth.signInWithPassword({
         email,

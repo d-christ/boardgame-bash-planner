@@ -46,10 +46,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [events, setEvents] = useState<Event[]>([]);
   const [participations, setParticipations] = useState<Participation[]>([]);
   const [users, setUsers] = useState<User[]>([]);
-  const [currentUser, setCurrentUser] = useState<User | null>(() => {
-    const savedUserId = localStorage.getItem('currentUserId');
-    return null; // Wir setzen später den aktuellen Benutzer, wenn die Benutzerdaten geladen sind
-  });
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   // Initialize Supabase and load data
   useEffect(() => {
@@ -81,15 +78,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const usersUnsub = supabaseService.subscribeToUsers((newUsers) => {
       setUsers(newUsers);
       
-      // Setze den aktuellen Benutzer, wenn Benutzerdaten geladen sind
+      // Restore user from localStorage if available
       const savedUserId = localStorage.getItem('currentUserId');
-      if (savedUserId) {
+      if (savedUserId && !currentUser) {
         const user = newUsers.find(u => u.id === savedUserId);
         if (user) {
           setCurrentUser(user);
         }
       }
     });
+
+    // Also check if we're logged in with Supabase
+    const checkAuthState = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        // We're authenticated with Supabase, make sure we're also logged in the app
+        const adminUser = users.find(u => u.isAdmin && u.name === 'Admin User');
+        if (adminUser && !currentUser) {
+          setCurrentUser(adminUser);
+          localStorage.setItem('currentUserId', adminUser.id);
+        }
+      }
+    };
+    
+    checkAuthState();
 
     // Cleanup subscriptions
     return () => {
@@ -98,7 +110,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       participationsUnsub();
       usersUnsub();
     };
-  }, [isInitialized]);
+  }, [isInitialized, users, currentUser]);
 
   // Initialize action hooks
   const boardgameActions = useBoardgameActions({

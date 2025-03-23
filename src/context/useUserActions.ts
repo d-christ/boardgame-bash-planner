@@ -33,6 +33,9 @@ export const useUserActions = ({
         // Set the current user in state
         setCurrentUser(user);
         
+        // Store user ID in local storage for persistence
+        localStorage.setItem('currentUserId', user.id);
+        
         toast({
           title: "Logged In",
           description: `Welcome, ${user.name}!`
@@ -55,6 +58,9 @@ export const useUserActions = ({
       
       // Update app state
       setCurrentUser(null);
+      
+      // Remove from local storage
+      localStorage.removeItem('currentUserId');
       
       toast({
         title: "Logged Out",
