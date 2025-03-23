@@ -12,10 +12,20 @@ import {
 } from '@/components/ui/dialog';
 import { Gamepad, Calendar, User, LogOut } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
+import { useState } from 'react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 export const Navigation = () => {
   const { currentUser, login, logout, users } = useApp();
   const location = useLocation();
+  const { toast } = useToast();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const navItems = [
     { 
@@ -38,6 +48,46 @@ export const Navigation = () => {
       icon: <User className="h-5 w-5 mr-2" />
     });
   }
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    
+    try {
+      // Sign in using Supabase auth
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      
+      if (error) {
+        throw error;
+      }
+      
+      // If successful, find matching user in our users table
+      const adminUser = users.find(u => u.isAdmin && u.name === 'Admin User');
+      
+      if (adminUser) {
+        login(adminUser.id);
+        setIsDialogOpen(false);
+        toast({
+          title: "Logged in successfully",
+          description: `Welcome back, ${adminUser.name}!`
+        });
+      } else {
+        throw new Error("User not found in the system");
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      toast({
+        title: "Login failed",
+        description: error.message || "Invalid credentials. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <nav className="bg-primary text-primary-foreground p-4 shadow-md">
@@ -66,7 +116,7 @@ export const Navigation = () => {
               Logout
             </Button>
           ) : (
-            <Dialog>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="secondary">Login</Button>
               </DialogTrigger>
@@ -74,23 +124,39 @@ export const Navigation = () => {
                 <DialogHeader>
                   <DialogTitle>Login</DialogTitle>
                   <DialogDescription>
-                    Select a user to login (demo purposes only)
+                    Enter your credentials to sign in
                   </DialogDescription>
                 </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  {users.map(user => (
-                    <Button 
-                      key={user.id} 
-                      onClick={() => login(user.id)}
-                      variant={user.isAdmin ? "default" : "outline"}
-                      className="w-full justify-start"
-                    >
-                      <User className="mr-2 h-4 w-4" />
-                      {user.name} {user.isAdmin && "(Admin)"}
+                <form onSubmit={handleLogin} className="space-y-4 py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input 
+                      id="email" 
+                      type="email" 
+                      placeholder="admin@boardgamebash.com" 
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="password">Password</Label>
+                    <Input 
+                      id="password" 
+                      type="password" 
+                      placeholder="••••••••" 
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="pt-2">
+                    <Button type="submit" className="w-full" disabled={isLoading}>
+                      {isLoading ? "Logging in..." : "Login"}
                     </Button>
-                  ))}
-                </div>
-                <DialogFooter>
+                  </div>
+                </form>
+                <DialogFooter className="pt-2">
                   <DialogTrigger asChild>
                     <Button variant="outline">Cancel</Button>
                   </DialogTrigger>
