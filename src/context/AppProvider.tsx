@@ -7,6 +7,7 @@ import { useEventActions } from './useEventActions';
 import { useParticipationActions } from './useParticipationActions';
 import { useUserActions } from './useUserActions';
 import * as supabaseService from '@/services/supabaseService';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface AppContextType {
   // Data
