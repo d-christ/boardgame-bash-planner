@@ -1,4 +1,3 @@
-
 import { supabase } from '@/lib/supabase';
 import { Boardgame, Event, Participation, User } from '@/types';
 import { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
@@ -527,31 +526,45 @@ export const subscribeToUsers = (callback: SubscriptionCallback<User[]>) => {
 // Helfer für Initialladung der Daten
 export const initializeDatabase = async () => {
   try {
+    console.log("Starting database initialization...");
+    
     // Prüfe, ob Daten bereits vorhanden sind
-    const { count: boardgamesCount } = await supabase
+    const { count: boardgamesCount, error: boardgamesError } = await supabase
       .from('boardgames')
       .select('*', { count: 'exact', head: true });
+      
+    if (boardgamesError) {
+      console.error("Error checking boardgames:", boardgamesError);
+    }
 
-    const { count: eventsCount } = await supabase
+    const { count: eventsCount, error: eventsError } = await supabase
       .from('events')
       .select('*', { count: 'exact', head: true });
+      
+    if (eventsError) {
+      console.error("Error checking events:", eventsError);
+    }
 
-    const { count: usersCount } = await supabase
+    const { count: usersCount, error: usersError } = await supabase
       .from('users')
       .select('*', { count: 'exact', head: true });
+      
+    if (usersError) {
+      console.error("Error checking users:", usersError);
+    }
 
     // Create admin user in auth system if not exists
     try {
-      // Check if admin user exists by trying to sign in
-      // This is a workaround since we can't use admin APIs in browser
-      const { data, error } = await supabase.auth.signInWithPassword({
+      // Try to sign in first to see if admin exists
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email: 'admin@boardgamebash.com',
         password: 'admin'
       });
       
-      if (error && error.status === 400) {
-        // User doesn't exist, create the admin user
-        const { error: signUpError } = await supabase.auth.signUp({
+      // If sign in fails, try to create the admin user
+      if (signInError && signInError.status === 400) {
+        console.log("Admin user doesn't exist, creating...");
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email: 'admin@boardgamebash.com',
           password: 'admin',
         });
@@ -561,8 +574,9 @@ export const initializeDatabase = async () => {
         } else {
           console.log('Admin auth user created successfully');
         }
-      } else if (!error) {
+      } else if (!signInError) {
         // User exists, sign out after check
+        console.log("Admin user exists and login successful");
         await supabase.auth.signOut();
       }
     } catch (authError) {
@@ -571,7 +585,8 @@ export const initializeDatabase = async () => {
     }
 
     // Wenn keine Daten vorhanden, initialisiere mit Demo-Daten
-    if (boardgamesCount === 0) {
+    if (!boardgamesCount || boardgamesCount === 0) {
+      console.log("Initializing boardgames...");
       const initialBoardgames = [
         {
           title: 'Catan',
@@ -599,26 +614,40 @@ export const initializeDatabase = async () => {
         }
       ];
 
-      await supabase.from('boardgames').insert(initialBoardgames);
-      console.log('Initialized boardgames');
+      const { error } = await supabase.from('boardgames').insert(initialBoardgames);
+      if (error) {
+        console.error("Error inserting boardgames:", error);
+      } else {
+        console.log('Initialized boardgames');
+      }
     }
 
-    if (usersCount === 0) {
+    if (!usersCount || usersCount === 0) {
+      console.log("Initializing users...");
       const initialUsers = [
         { name: 'Admin User', is_admin: true },
         { name: 'Regular User', is_admin: false },
       ];
 
-      await supabase.from('users').insert(initialUsers);
-      console.log('Initialized users');
+      const { error } = await supabase.from('users').insert(initialUsers);
+      if (error) {
+        console.error("Error inserting users:", error);
+      } else {
+        console.log('Initialized users');
+      }
     }
 
-    if (eventsCount === 0) {
+    if (!eventsCount || eventsCount === 0) {
+      console.log("Initializing events...");
       // Hole Boardgame-IDs für das Event
-      const { data: boardgames } = await supabase
+      const { data: boardgames, error: bgError } = await supabase
         .from('boardgames')
         .select('id')
         .limit(2);
+
+      if (bgError) {
+        console.error("Error fetching boardgames for events:", bgError);
+      }
 
       if (boardgames && boardgames.length > 0) {
         const initialEvents = [
@@ -630,11 +659,16 @@ export const initializeDatabase = async () => {
           }
         ];
 
-        await supabase.from('events').insert(initialEvents);
-        console.log('Initialized events');
+        const { error } = await supabase.from('events').insert(initialEvents);
+        if (error) {
+          console.error("Error inserting events:", error);
+        } else {
+          console.log('Initialized events');
+        }
       }
     }
 
+    console.log("Database initialization complete");
     return true;
   } catch (error) {
     console.error('Error initializing database:', error);

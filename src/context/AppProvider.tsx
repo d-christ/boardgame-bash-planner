@@ -53,7 +53,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     const initializeApp = async () => {
       try {
-        // Initialisiere Datenbank mit Demo-Daten, falls leer
+        // Check if Supabase is properly configured
+        if (!supabase) {
+          console.error('Supabase client is not initialized');
+          toast({
+            title: "Initialization Error",
+            description: "Supabase client is not initialized. Please check your configuration.",
+            variant: "destructive"
+          });
+          return;
+        }
+
+        // Check Supabase connection
+        const { data, error } = await supabase.from('users').select('count');
+        if (error) {
+          console.error('Error connecting to Supabase:', error);
+        } else {
+          console.log('Successfully connected to Supabase');
+        }
+
+        // Initialize database with demo data if empty
         await supabaseService.initializeDatabase();
         setIsInitialized(true);
       } catch (error) {
@@ -72,6 +91,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Set up Supabase subscriptions
   useEffect(() => {
     if (!isInitialized) return;
+
+    // Setup Authentication listener
+    const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        console.log("Auth state changed:", event, session?.user?.email);
+      }
+    );
 
     const boardgamesUnsub = supabaseService.subscribeToBoardgames(setBoardgames);
     const eventsUnsub = supabaseService.subscribeToEvents(setEvents);
@@ -106,6 +132,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     // Cleanup subscriptions
     return () => {
+      authSubscription.unsubscribe();
       boardgamesUnsub();
       eventsUnsub();
       participationsUnsub();

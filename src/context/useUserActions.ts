@@ -23,11 +23,36 @@ export const useUserActions = ({
       try {
         // For the admin user with specific credentials
         if (user.isAdmin && user.name === 'Admin User') {
-          // Use Supabase auth - this will work for the hardcoded admin/admin login
-          await supabase.auth.signInWithPassword({
+          // First check if the admin user exists
+          const { data: { user: authUser }, error: signInError } = await supabase.auth.signInWithPassword({
             email: 'admin@boardgamebash.com',
             password: 'admin'
           });
+          
+          // If login fails, try to create the admin user
+          if (signInError && signInError.status === 400) {
+            console.log("Admin login failed, attempting to create admin user...");
+            const { data: { user: newUser }, error: signUpError } = await supabase.auth.signUp({
+              email: 'admin@boardgamebash.com',
+              password: 'admin'
+            });
+            
+            if (signUpError) {
+              throw signUpError;
+            }
+            
+            // After signup, try login again
+            const { error: retryError } = await supabase.auth.signInWithPassword({
+              email: 'admin@boardgamebash.com',
+              password: 'admin'
+            });
+            
+            if (retryError) {
+              throw retryError;
+            }
+            
+            console.log("Admin user created and logged in successfully");
+          }
         }
         
         // Set the current user in state
@@ -44,7 +69,7 @@ export const useUserActions = ({
         console.error('Login error:', error);
         toast({
           title: "Login Failed",
-          description: "There was an error logging in. Please try again.",
+          description: error.message || "There was an error logging in. Please try again.",
           variant: "destructive"
         });
       }

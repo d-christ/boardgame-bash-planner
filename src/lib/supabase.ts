@@ -1,4 +1,3 @@
-
 import { createClient } from '@supabase/supabase-js';
 import { Database } from '@/types/database';
 
@@ -6,8 +5,8 @@ import { Database } from '@/types/database';
 const isDev = import.meta.env.DEV;
 
 // Get Supabase URL and key from environment variables with fallbacks for development
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://tlbygdxblfpqnheqsuzw.supabase.co';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsYnlnZHhibGZwcW5oZXFzdXp3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI2MzEwMTEsImV4cCI6MjA1ODIwNzAxMX0.bAddhrdShtjK0wbGuP7B1wf1XFUsZJzy1prYyiXi8as';
 
 // Show warning if variables are missing
 if (!supabaseUrl || !supabaseAnonKey) {
@@ -72,10 +71,18 @@ FROM boardgames;
   `);
 }
 
-// Create and export Supabase client only if URL and key are available
-export const supabase = (supabaseUrl && supabaseAnonKey) 
-  ? createClient<Database>(supabaseUrl, supabaseAnonKey)
-  : createMockSupabaseClient();
+// Create and export Supabase client with proper auth settings
+export const supabase = createClient<Database>(
+  supabaseUrl, 
+  supabaseAnonKey,
+  {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      storageKey: 'boardgame-bash-auth-token',
+    }
+  }
+);
 
 // Mock client implementation for development when credentials are missing
 function createMockSupabaseClient() {

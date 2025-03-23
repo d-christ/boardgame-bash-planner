@@ -22,8 +22,8 @@ export const Navigation = () => {
   const { currentUser, login, logout, users } = useApp();
   const location = useLocation();
   const { toast } = useToast();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('admin@boardgamebash.com');
+  const [password, setPassword] = useState('admin');
   const [isLoading, setIsLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -56,21 +56,44 @@ export const Navigation = () => {
     try {
       console.log("Attempting login with email:", email);
       
-      // Sign in using Supabase auth
+      // First try to authenticate with Supabase
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
       
       if (error) {
-        throw error;
+        // If it fails with invalid credentials, try to sign up
+        if (error.status === 400 && error.message === "Invalid login credentials") {
+          console.log("Login failed, trying to create user...");
+          const { error: signUpError } = await supabase.auth.signUp({
+            email,
+            password
+          });
+          
+          if (signUpError) {
+            throw signUpError;
+          }
+          
+          // Try login again after signup
+          const { error: retryError } = await supabase.auth.signInWithPassword({
+            email,
+            password
+          });
+          
+          if (retryError) {
+            throw retryError;
+          }
+        } else {
+          throw error;
+        }
       }
       
       // If successful, find matching user in our users table
       const adminUser = users.find(u => u.isAdmin && u.name === 'Admin User');
       
       if (adminUser) {
-        login(adminUser.id);
+        await login(adminUser.id);
         setIsDialogOpen(false);
         toast({
           title: "Logged in successfully",
