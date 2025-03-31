@@ -1,4 +1,3 @@
-
 import { useApp } from '@/context';
 import { Button } from '@/components/ui/button';
 import { 
@@ -23,7 +22,7 @@ export const Navigation = () => {
   const location = useLocation();
   const { toast } = useToast();
   const [email, setEmail] = useState('admin@boardgamebash.com');
-  const [password, setPassword] = useState('admin');
+  const [password, setPassword] = useState('admin123');
   const [isLoading, setIsLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -40,7 +39,6 @@ export const Navigation = () => {
     }
   ];
   
-  // Add Admin link if user is admin
   if (currentUser?.isAdmin) {
     navItems.push({
       name: 'Admin',
@@ -56,14 +54,12 @@ export const Navigation = () => {
     try {
       console.log("Attempting login with email:", email);
       
-      // First try to authenticate with Supabase
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
       
       if (error) {
-        // If it fails with invalid credentials, try to sign up
         if (error.status === 400 && error.message === "Invalid login credentials") {
           console.log("Login failed, trying to create user...");
           const { error: signUpError } = await supabase.auth.signUp({
@@ -75,7 +71,6 @@ export const Navigation = () => {
             throw signUpError;
           }
           
-          // Try login again after signup
           const { error: retryError } = await supabase.auth.signInWithPassword({
             email,
             password
@@ -89,7 +84,6 @@ export const Navigation = () => {
         }
       }
       
-      // If successful, find matching user in our users table
       const adminUser = users.find(u => u.isAdmin && u.name === 'Admin User');
       
       if (adminUser) {

@@ -21,6 +21,7 @@ export const GamePreferences = ({ eventId, eventBoardgames }: GamePreferencesPro
   const [excluded, setExcluded] = useState<string[]>([]);
   const [initialized, setInitialized] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [savedSuccessfully, setSavedSuccessfully] = useState(false);
   
   console.log("[GAME_PREFS] Rendering with participantId:", participantId);
   
@@ -31,8 +32,6 @@ export const GamePreferences = ({ eventId, eventBoardgames }: GamePreferencesPro
   );
   
   console.log("[GAME_PREFS] Found participation:", userParticipation);
-  console.log("[GAME_PREFS] Current participations in localStorage:",
-    JSON.parse(localStorage.getItem('participations') || '[]'));
   
   const initializeGamePreferences = useCallback(() => {
     if (!participantId) {
@@ -42,14 +41,7 @@ export const GamePreferences = ({ eventId, eventBoardgames }: GamePreferencesPro
     
     console.log("[GAME_PREFS] Initializing game preferences");
     
-    const storedParticipations = JSON.parse(localStorage.getItem('participations') || '[]');
-    const storedParticipation = storedParticipations.find((p: any) => 
-      p.eventId === eventId && 
-      ((currentUser && p.userId === currentUser.id) || 
-       (!currentUser && p.attendeeName === participantId))
-    );
-    
-    const participation = storedParticipation || userParticipation;
+    const participation = userParticipation;
     
     console.log("[GAME_PREFS] Using participation:", participation);
     
@@ -81,7 +73,7 @@ export const GamePreferences = ({ eventId, eventBoardgames }: GamePreferencesPro
     console.log("[GAME_PREFS] Setting game list:", sortedGames);
     setGameList(sortedGames);
     setInitialized(true);
-  }, [participantId, eventId, eventBoardgames, userParticipation, currentUser]);
+  }, [participantId, eventId, eventBoardgames, userParticipation]);
   
   useEffect(() => {
     if (!isSaving) {
@@ -95,6 +87,7 @@ export const GamePreferences = ({ eventId, eventBoardgames }: GamePreferencesPro
     const newList = [...gameList];
     [newList[index - 1], newList[index]] = [newList[index], newList[index - 1]];
     setGameList(newList);
+    setSavedSuccessfully(false);
   };
   
   const moveGameDown = (index: number) => {
@@ -103,9 +96,12 @@ export const GamePreferences = ({ eventId, eventBoardgames }: GamePreferencesPro
     const newList = [...gameList];
     [newList[index], newList[index + 1]] = [newList[index + 1], newList[index]];
     setGameList(newList);
+    setSavedSuccessfully(false);
   };
   
   const toggleExcluded = (gameId: string) => {
+    setSavedSuccessfully(false);
+    
     if (excluded.includes(gameId)) {
       setExcluded(excluded.filter(id => id !== gameId));
       
@@ -139,39 +135,17 @@ export const GamePreferences = ({ eventId, eventBoardgames }: GamePreferencesPro
     console.log("[GAME_PREFS] Exclusions to save:", excluded);
     
     try {
-      updateRankings(participantId, eventId, rankings);
+      await updateRankings(participantId, eventId, rankings);
+      console.log("[GAME_PREFS] Rankings saved successfully");
       
-      await new Promise(resolve => setTimeout(resolve, 300));
+      await updateExcluded(participantId, eventId, excluded);
+      console.log("[GAME_PREFS] Exclusions saved successfully");
       
-      updateExcluded(participantId, eventId, excluded);
-      
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
-      console.log("[GAME_PREFS] Saved successfully, refreshing from localStorage");
-      
-      const storedData = localStorage.getItem('participations');
-      console.log("[GAME_PREFS] Current localStorage state:", storedData);
-      
-      if (storedData) {
-        const storedParticipations = JSON.parse(storedData);
-        const participationIndex = storedParticipations.findIndex((p: Participation) => 
-          p.eventId === eventId && 
-          ((currentUser && p.userId === currentUser.id) || 
-          (!currentUser && p.attendeeName === participantId))
-        );
-  
-        if (participationIndex !== -1) {
-          storedParticipations[participationIndex].rankings = rankings;
-          
-          localStorage.setItem('participations', JSON.stringify(storedParticipations));
-          console.log("[GAME_PREFS] Explicitly updated localStorage with new rankings");
-        }
-      }
-      
+      setSavedSuccessfully(true);
     } catch (error) {
       console.error("[GAME_PREFS] Error saving preferences:", error);
     } finally {
-      setTimeout(() => setIsSaving(false), 100);
+      setIsSaving(false);
     }
   };
   
@@ -207,6 +181,9 @@ export const GamePreferences = ({ eventId, eventBoardgames }: GamePreferencesPro
         <CardTitle>Game Preferences</CardTitle>
         <CardDescription>
           Arrange games in order of preference (top = most preferred)
+          {savedSuccessfully && (
+            <span className="ml-2 text-green-500 font-medium">✓ Saved</span>
+          )}
         </CardDescription>
       </CardHeader>
       <CardContent>

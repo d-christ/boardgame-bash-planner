@@ -26,7 +26,7 @@ export const useUserActions = ({
           // First check if the admin user exists
           const { data: { user: authUser }, error: signInError } = await supabase.auth.signInWithPassword({
             email: 'admin@boardgamebash.com',
-            password: 'admin'
+            password: 'admin123'
           });
           
           // If login fails, try to create the admin user
@@ -34,7 +34,7 @@ export const useUserActions = ({
             console.log("Admin login failed, attempting to create admin user...");
             const { data: { user: newUser }, error: signUpError } = await supabase.auth.signUp({
               email: 'admin@boardgamebash.com',
-              password: 'admin'
+              password: 'admin123'
             });
             
             if (signUpError) {
@@ -44,7 +44,7 @@ export const useUserActions = ({
             // After signup, try login again
             const { error: retryError } = await supabase.auth.signInWithPassword({
               email: 'admin@boardgamebash.com',
-              password: 'admin'
+              password: 'admin123'
             });
             
             if (retryError) {

@@ -111,58 +111,61 @@ export const useParticipationActions = ({
     try {
       console.log("[RANKINGS] Starting update with:", { userId, eventId, rankings });
       
-      // Prüfen, ob userId eine numerische ID oder ein Gästename ist
+      // Check if userId is a numeric ID or a guest name
       const isUserId = userId.match(/^[0-9]+$/);
       
+      // Call the Supabase service to update the database
       if (isUserId) {
         await supabaseService.updateParticipationRankings(userId, undefined, eventId, rankings);
       } else {
         await supabaseService.updateParticipationRankings(undefined, userId, eventId, rankings);
       }
       
-      // Lokalen State aktualisieren für sofortige UI-Aktualisierung
-      const participantIndex = participations.findIndex(
-        p => p.eventId === eventId && 
-             (
-               (isUserId && p.userId === userId) || 
-               (!isUserId && p.attendeeName === userId)
-             )
-      );
-      
-      if (participantIndex === -1) {
-        console.log("[RANKINGS] Creating new participation with rankings");
+      // Immediately update local state to reflect the changes
+      setParticipations(prev => {
+        const updatedParticipations = [...prev];
+        const participantIndex = updatedParticipations.findIndex(
+          p => p.eventId === eventId && 
+               (
+                 (isUserId && p.userId === userId) || 
+                 (!isUserId && p.attendeeName === userId)
+               )
+        );
         
-        const newParticipation: Participation = {
-          eventId,
-          attending: true,
-          rankings: { ...rankings }
-        };
-        
-        // Add userId or attendeeName based on what was provided
-        if (isUserId) {
-          newParticipation.userId = userId;
-        } else {
-          newParticipation.attendeeName = userId;
-        }
-        
-        setParticipations(prev => [...prev, newParticipation]);
-      } else {
-        console.log("[RANKINGS] Updating existing participation with rankings");
-        
-        setParticipations(prev => {
-          const updated = [...prev];
-          updated[participantIndex] = {
-            ...updated[participantIndex],
+        if (participantIndex === -1) {
+          // Create new participation if it doesn't exist
+          const newParticipation: Participation = {
+            eventId,
+            attending: true,
             rankings: { ...rankings }
           };
-          return updated;
-        });
-      }
+          
+          // Add userId or attendeeName based on what was provided
+          if (isUserId) {
+            newParticipation.userId = userId;
+          } else {
+            newParticipation.attendeeName = userId;
+          }
+          
+          updatedParticipations.push(newParticipation);
+        } else {
+          // Update existing participation
+          updatedParticipations[participantIndex] = {
+            ...updatedParticipations[participantIndex],
+            rankings: { ...rankings }
+          };
+        }
+        
+        return updatedParticipations;
+      });
       
       toast({
         title: "Preferences Saved",
         description: "Your game rankings have been updated successfully."
       });
+      
+      console.log("[RANKINGS] Successfully updated rankings in state");
+      return true;
     } catch (error) {
       console.error('Error updating rankings:', error);
       toast({
@@ -170,6 +173,7 @@ export const useParticipationActions = ({
         description: "Failed to update game rankings. Please try again.",
         variant: "destructive"
       });
+      return false;
     }
   };
 
@@ -177,58 +181,61 @@ export const useParticipationActions = ({
     try {
       console.log("[EXCLUSIONS] Starting update with:", { userId, eventId, excluded });
       
-      // Prüfen, ob userId eine numerische ID oder ein Gästename ist
+      // Check if userId is a numeric ID or a guest name
       const isUserId = userId.match(/^[0-9]+$/);
       
+      // Call the Supabase service to update the database
       if (isUserId) {
         await supabaseService.updateParticipationExcluded(userId, undefined, eventId, excluded);
       } else {
         await supabaseService.updateParticipationExcluded(undefined, userId, eventId, excluded);
       }
       
-      // Lokalen State aktualisieren für sofortige UI-Aktualisierung
-      const participantIndex = participations.findIndex(
-        p => p.eventId === eventId && 
-             (
-               (isUserId && p.userId === userId) || 
-               (!isUserId && p.attendeeName === userId)
-             )
-      );
-      
-      if (participantIndex === -1) {
-        console.log("[EXCLUSIONS] Creating new participation with exclusions");
+      // Immediately update local state to reflect the changes
+      setParticipations(prev => {
+        const updatedParticipations = [...prev];
+        const participantIndex = updatedParticipations.findIndex(
+          p => p.eventId === eventId && 
+               (
+                 (isUserId && p.userId === userId) || 
+                 (!isUserId && p.attendeeName === userId)
+               )
+        );
         
-        const newParticipation: Participation = {
-          eventId,
-          attending: true,
-          excluded: [...excluded]
-        };
-        
-        // Add userId or attendeeName based on what was provided
-        if (isUserId) {
-          newParticipation.userId = userId;
-        } else {
-          newParticipation.attendeeName = userId;
-        }
-        
-        setParticipations(prev => [...prev, newParticipation]);
-      } else {
-        console.log("[EXCLUSIONS] Updating existing participation with exclusions");
-        
-        setParticipations(prev => {
-          const updated = [...prev];
-          updated[participantIndex] = {
-            ...updated[participantIndex],
+        if (participantIndex === -1) {
+          // Create new participation if it doesn't exist
+          const newParticipation: Participation = {
+            eventId,
+            attending: true,
             excluded: [...excluded]
           };
-          return updated;
-        });
-      }
+          
+          // Add userId or attendeeName based on what was provided
+          if (isUserId) {
+            newParticipation.userId = userId;
+          } else {
+            newParticipation.attendeeName = userId;
+          }
+          
+          updatedParticipations.push(newParticipation);
+        } else {
+          // Update existing participation
+          updatedParticipations[participantIndex] = {
+            ...updatedParticipations[participantIndex],
+            excluded: [...excluded]
+          };
+        }
+        
+        return updatedParticipations;
+      });
       
       toast({
         title: "Exclusions Saved",
         description: "Your game exclusions have been updated successfully."
       });
+      
+      console.log("[EXCLUSIONS] Successfully updated exclusions in state");
+      return true;
     } catch (error) {
       console.error('Error updating exclusions:', error);
       toast({
@@ -236,6 +243,7 @@ export const useParticipationActions = ({
         description: "Failed to update game exclusions. Please try again.",
         variant: "destructive"
       });
+      return false;
     }
   };
 
